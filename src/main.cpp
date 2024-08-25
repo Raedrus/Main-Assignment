@@ -27,403 +27,175 @@ Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins,KP_ROWS, KP_COLS );
 
 
 /*Variables from ESP1*/
+#include <FreeRTOSConfig.h>
+
+
+TaskHandle_t Check_Temp_Handler;  // Check Temp + Climate Control
+TaskHandle_t Logger_Handler;      // Log Data 
+TaskHandle_t IoT_Handler;         // Check and Update for IoT 
+TaskHandle_t Resources_Monitor_Handler;    // Check Feed (5) + Water Consumption    
+// TaskHandle_t Keypad_Check_Handler;      // Check Keypad_Check and the Input
+
+/*-----------------PLS CHANGE ACCORDING TO YOUR NEEDS------------------*/
+// IO pins
+/*INPUT*/
+/*Temperature And Humidity Sensor*/
+const int Temp_Sensor1 = 4;    //DHT11
+const int Temp_Sensor2 = 12;   //DHT11
+
+/*Resources Consumption Sensor*/
+const int Water_sensor = 12;   //Potentiometer
+const int Feed_sensor1 = 4;    //
+const int Feed_sensor2 = 12;   //
+const int Feed_sensor3 = 12;   //
+const int Feed_sensor4 = 12;   //
+const int Feed_sensor5 = 12;   //
+
+    
+/*OUTPUT*/
+/*Temperature And Humidity*/
+const int Venti = 4;           //YelLED
+const int Heat = 12;           //RedLED
+const int Cool = 4;            //BlueLED
+
+
+/*SERIAL COMMUNICATION*/
+const int rx_pin = 16;       //RX pin
+const int tx_pin = 17;       //TX pin
+
+/*Variables*/
 int Temp1=1; //Temperature for enclosure 1
 int Humi1=10; //Humidity for enclosure 1
 int Temp2=9; //Temperature for enclosure 2
 int Humi2=10; //Humidity for enclosure 2
 
-/*Variables to ESP1*/
-enum ANIMAL {Pig, Chicken};
-ANIMAL ani;
 
-enum STATE {SalesDelivery,Recovery,Deceased};
-STATE reg;
+void LCD_Serial(){
+  //Serial Com to 2nd ESP for LCD output
+}
 
-int ID;
-
-enum CONTROL {VentilationOn, VentilationOff, CoolerOn, CoolerOff, 
-HeaterOn, HeaterOff};
-CONTROL cont;
+void Serial_com(){
 
 
+}
 
-/*Internal Variables*/
-char16_t key; //keypad input 
-int i=0;      //universal
-String received_data;
+//Check_Temp: blinks an LED every 1s
+void Check_Temp( void * pvParameters ){
+  
+    while(1){
+    Serial.print("Check_Temp running on core ");
+    Serial.println(xPortGetCoreID());
 
-enum Communication {Update, Controlsys};
-Communication com;
 
-/*--------------Functions--------------*/
-//Waiting for Serial Response
-void send_wait(String event);
-//Send serial to ESP1
-void SerialCom();
-//check serial communication input
-void Check_serial();
-//Clear and Display String at LCD for 1s
-void Post(String event);
-//Registration of animals 
-void Registration();
-//Control the system
-void Control_sys();
-//Display Temp and Humid at LCD
-void LCD_Temp();
+
+    
+  } 
+}
+
+//Logger_Handlercode: blinks an LED every 500 ms
+void Logger( void * pvParameters ){
+   
+    while(1){
+    Serial.print("Logger_Handler running on core ");
+    Serial.println(xPortGetCoreID());
+
+    
+  }
+}
+
+//IoT: blinks an LED every 500 ms
+void IoT( void * pvParameters ){
+   
+    while(1){
+    Serial.print("IoT_Handler running on core ");
+    Serial.println(xPortGetCoreID());
+
+    
+  }
+}
+
+
+void Resources_Monitor( void * pvParameters ){
+   
+    while(1){
+    Serial.print("Resources_Monitor_Handler running on core ");
+    Serial.println(xPortGetCoreID());
+
+    
+  }
+}
+
+
 
 void setup() {
-  // set up the LCD's number of columns and rows:
-  lcd.begin(LCD_COLS, LCD_ROWS);
-  Serial.begin(115200);
-  // Print a message to the LCD, indicate the LCD is working
-  lcd.print("LCD is powered on");
-  delay(1000);
-  LCD_Temp();
+  Serial.begin(115200); 
+  
+  //IO Initialization
+  pinMode(Venti, OUTPUT);
+  pinMode(Heat, OUTPUT);
+  pinMode(Cool, OUTPUT);
+
+  pinMode(Temp_Sensor1, INPUT);
+  pinMode(Temp_Sensor2, INPUT);
+  pinMode(Feed_sensor1, INPUT);
+  pinMode(Feed_sensor2, INPUT);
+  pinMode(Feed_sensor3, INPUT);
+  pinMode(Feed_sensor4, INPUT);
+  pinMode(Feed_sensor5, INPUT);
+  pinMode(Water_sensor, INPUT);
+
+
+  //create a task that will be executed in the Check_Temp() function, with priority 1 and executed on core 0
+  xTaskCreatePinnedToCore(
+                    Check_Temp,   /* Task function. */
+                    "Check_Temp_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        /* parameter of the task */
+                    1,           /* priority of the task */
+                    &Check_Temp_Handler,      /* Task handle to keep track of created task */
+                    0);          /* pin task to core 0 */                  
+  delay(500); 
+
+  //create a task that will be executed in the Logger() function, with priority 1 and executed on core 1
+  xTaskCreatePinnedToCore(
+                    Logger,   /* Task function. */
+                    "Logger_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        // parameter of the task 
+                    1,           /* priority of the task */
+                    &Logger_Handler,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 1 */
+    delay(500); 
+
+     //create a task that will be executed in the IoT() function, with priority 1 and executed on core 1
+  xTaskCreatePinnedToCore(
+                    IoT,   /* Task function. */
+                    "IoT_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        // parameter of the task 
+                    1,           /* priority of the task */
+                    &IoT_Handler,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 1 */
+    delay(500); 
+
+        //create a task that will be executed in the IoT() function, with priority 1 and executed on core 1
+  xTaskCreatePinnedToCore(
+                    Resources_Monitor,   /* Task function. */
+                    "Resources_Monitor_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        // parameter of the task 
+                    1,           /* priority of the task */
+                    &Resources_Monitor_Handler,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 1 */
+    delay(500); 
+  
+
 }
- 
+
+
+
+
+
 void loop() {
-  Check_serial();
-  if (kpd.getKey()=='#'){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("1:Registration");
-    lcd.setCursor(0, 1);
-    lcd.print("2:Control");
-    while (key!='1' &&key!='2' ){
-            delay(1);
-            key=kpd.getKey();
-        }
-    }
-    switch (key)
-    {
-    case '1':
-        Registration();
-        break;
-    case '2':
-        Control_sys();
-        break;
-    default:
-        break;
-    }
-    
-    Post("Back To Main...");
-    LCD_Temp();
-
-}
-
-//Waiting for Serial Response
-void send_wait(String event){
-    Serial.print(event);
-    while (Serial.available()==0){
-            delay(1);
-            //waiting response
-        }
-    //read the response msg
-    received_data=Serial.readString();    
-}
-
-//Send serial to ESP1
-void SerialCom(){
-    if (com==0)//Update
-    {
-        send_wait("Register");
-        
-        /*UPDATE the registration info*/
-        send_wait(String(reg));
-        send_wait(String(ani));
-        send_wait(String(ID));
-    }
-
-    else if (com==1)//Controlsys
-    {
-        send_wait("Control");
-        send_wait(String(cont));
-    }
-
-}
-
-//check serial communication input
-void Check_serial(){
-    received_data="";
-    
-    //Check if any data is sent to ESP2
-    if (Serial.available()==1){
-        received_data=Serial.readString();
-    }
-
-    //Update Temperature and Humidity
-    if (received_data=="Temp"){
-        send_wait("OK");
-        Temp1=received_data.toInt();
-        send_wait("OK");
-        Humi1=received_data.toInt();
-        send_wait("OK");
-        Temp2=received_data.toInt();
-        send_wait("OK");
-        Humi2=received_data.toInt();
-        
-        //Update the data at LCD
-        LCD_Temp();
-    }
-}
-
-//Clear and Display String at LCD for 1s
-void Post(String event){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(event); 
-    delay(1000);
-}
-
-void Control_sys(){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("System Control");
-    delay(1000);
-    lcd.clear();
-
-    //Select option
-    i=0;
-    int j=0;
-    //Category Input
-    while(key!='A'){
-        lcd.clear();
-        key='*';
-        switch (i)
-        {
-        case '0':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Ventilation");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        case '1':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Cooler");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        case '2':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Heater");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        default:
-            i=0;
-            break;
-        }
-
-        while (key!='1' &&key!='2'  &&key!='A' ){
-            delay(1);
-            key=kpd.getKey();
-        }
-
-        if (key=='1'){
-            j=i*2;
-            delay(200);
-            break;
-        }
-
-        else if (key=='2'){
-            i++;
-            delay(200);
-        }
-            
-        else if (key=='A') 
-            break;
-        
-        else{
-            Post("Process Failed");
-            key='A';
-            break;
-        }
-    }
-
-    while(key!='A'){
-        lcd.clear();
-        key='*';
-        
-        lcd.setCursor(0, 0);
-        lcd.print("1:On");
-        lcd.setCursor(0, 1);
-        lcd.print("2:Off     A:Exit");
-              
-        while (key!='1' &&key!='2'  &&key!='A' ){
-            delay(1);
-            key=kpd.getKey();
-        }
-
-        if (key=='1'){
-            //j is even, meaning ON
-            break;
-        }
-
-        else if (key=='2'){
-            j++; //odd is off, originally is even
-            break;
-        }
-            
-        else if (key=='A') 
-            break;
-        
-        else{
-            Post("Process Failed");
-            key='A';
-            break;
-        }
-    }
-
-    if (key!='A')
-    {
-        com=Controlsys;
-        SerialCom();
-    }
-    
-    
-}
-
-//Registration of animals 
-void Registration(){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Registration of");
-    lcd.setCursor(0, 1);
-    lcd.print("Animals");
-    delay(1000);
-    lcd.clear();
-
-    i=0;
-    //Category Input
-    while(key!='A'){
-        lcd.clear();
-        key='*';
-        switch (i)
-        {
-        case '0':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Sales/Delivery");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        case '1':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Recovery");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        case '2':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Deceased");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        default:
-            i=0;
-            break;
-        }
-
-        while (key!='1' &&key!='2'  &&key!='A' ){
-            delay(1);
-            key=kpd.getKey();
-        }
-
-        if (key=='1'){
-            reg=static_cast<STATE>(i);
-            delay(200);
-            break;
-        }
-
-        else if (key=='2'){
-            i++;
-            delay(200);
-        }
-            
-        else if (key=='A') 
-            break;
-        
-        else{
-            Post("Process Failed");
-            key='A';
-            break;
-        }
-    }
-
-    lcd.clear();
-    
-    //Animal Type Input
-    if (key!='A'){
-        lcd.setCursor(0, 0);
-        lcd.print("1:Pig    A:EXIT");
-        lcd.setCursor(0, 1);
-        lcd.print("2:Chicken");
-        key='*';
-
-        while (key!='1' &&key!='2'  &&key!='A' ){
-            delay(1);
-            key=kpd.getKey(); 
-            }
-
-        lcd.clear();
-        switch (key)
-        {
-        case '1':
-            ani=Pig;
-            key='*';
-            break;
-        case '2':
-            ani=Chicken;
-            key='*';
-            break;
-        case 'A':
-            Post("Exiting...");
-            break;
-        default:
-            Post("Process Failed");
-            key='A';
-            break;
-        }
-    }
-    
-    
-    i=0;
-    ID=0;
-    //Animal ID input
-    while(key!='A'){
-        lcd.setCursor(0, 0);
-        lcd.printf("Animal ID: %.3",ID);
-        lcd.setCursor(0, 1);
-        lcd.print("C:Confirm A:Exit");
-
-        key='*';
-        key=kpd.getKey();
-
-        if (key=='A' || key=='C')
-            break;
-
-        else if (int(key)>=0 && int(key)<=9){
-            ID+=int(key)*pow(10,i);
-            i++;
-            delay(200);
-        }  
-    }
-
-    if(key=='C'){
-        com=Update;
-        SerialCom();
-        Post("Registering...");
-    }
-
-    key='*';
-}
-
-//Display Temp and Humid at LCD
-void LCD_Temp(){
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.printf("Temp : %.2d", Temp1, "  ", "%.2d", Temp2);
-  lcd.setCursor(0, 1);
-  lcd.printf("Humid: %.2d", Humi1, "  ", "%.2d", Humi2); 
+  
 }
