@@ -2,130 +2,172 @@
 #include <FreeRTOSConfig.h>
 
 
-TaskHandle_t climateControlHandler;
-TaskHandle_t loggerHandler;
-TaskHandle_t IOTHandler;
-TaskHandle_t resourceMonitorHandler;
-TaskHandle_t keypadHandler;
+TaskHandle_t Check_Temp_Handler;  // Check Temp + Climate Control
+TaskHandle_t Logger_Handler;      // Log Data 
+TaskHandle_t IoT_Handler;         // Check and Update for IoT 
+TaskHandle_t Resources_Monitor_Handler;    // Check Feed (5) + Water Consumption    
+// TaskHandle_t Keypad_Check_Handler;      // Check Keypad_Check and the Input
 
-void logger(void * pvParameters);
-void climateControl(void * pvParameters);
-void IOT(void * pvParameters);
-void resourceMonitor(void * pvParameters);
-void keypad(void * pvParameters);
-void LCD();
+/*-----------------PLS CHANGE ACCORDING TO YOUR NEEDS------------------*/
+// IO pins
+/*INPUT*/
+/*Temperature And Humidity Sensor*/
+const int Temp_Sensor1 = 4;    //DHT11
+const int Temp_Sensor2 = 12;   //DHT11
 
-// LED pins
-const int RedLED = 2;
-const int YelLED = 4;
+/*Resources Consumption Sensor*/
+const int Water_sensor = 12;   //Potentiometer
+const int Feed_sensor1 = 4;    //
+const int Feed_sensor2 = 12;   //
+const int Feed_sensor3 = 12;   //
+const int Feed_sensor4 = 12;   //
+const int Feed_sensor5 = 12;   //
 
-void setup() {
-  Serial.begin(115200); 
-  pinMode(RedLED, OUTPUT);
-  pinMode(YelLED, OUTPUT);
+    
+/*OUTPUT*/
+/*Temperature And Humidity*/
+const int Venti = 4;           //YelLED
+const int Heat = 12;           //RedLED
+const int Cool = 4;            //BlueLED
 
-  
 
-  //create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
-  xTaskCreatePinnedToCore(
-                    climateControl,   /* Task function. */
-                    "Climate Control",     /* name of task. */
-                    10000,       /* Stack size of task */
-                    NULL,        // parameter of the task 
-                    2,           /* priority of the task */
-                    &climateControlHandler,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 1 */
-    delay(500); 
+/*SERIAL COMMUNICATION*/
+const int rx_pin = 16;       //RX pin
+const int tx_pin = 17;       //TX pin
 
-  xTaskCreatePinnedToCore(
-                    logger,   /* Task function. */
-                    "Data logger",     /* name of task. */
-                    10000,       /* Stack size of task */
-                    NULL,        // parameter of the task 
-                    2,           /* priority of the task */
-                    &loggerHandler,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 1 */
-  delay(500); 
+/*Variables*/
+int Temp1=1; //Temperature for enclosure 1
+int Humi1=10; //Humidity for enclosure 1
+int Temp2=9; //Temperature for enclosure 2
+int Humi2=10; //Humidity for enclosure 2
 
-  xTaskCreatePinnedToCore(
-                  IOT,   /* Task function. */
-                  "IOT Handler",     /* name of task. */
-                  10000,       /* Stack size of task */
-                  NULL,        /* parameter of the task */
-                  1,           /* priority of the task */
-                  &IOTHandler,      /* Task handle to keep track of created task */
-                  0);          /* pin task to core 0 */                  
-  delay(500); 
 
-  xTaskCreatePinnedToCore(
-                  resourceMonitor,   /* Task function. */
-                  "Resource Monitor",     /* name of task. */
-                  10000,       /* Stack size of task */
-                  NULL,        /* parameter of the task */
-                  1,           /* priority of the task */
-                  &resourceMonitorHandler,      /* Task handle to keep track of created task */
-                  0);          /* pin task to core 0 */                  
-  delay(500); 
-
-  xTaskCreatePinnedToCore(
-                  keypad,   /* Task function. */
-                  "Keypad",     /* name of task. */
-                  10000,       /* Stack size of task */
-                  NULL,        /* parameter of the task */
-                  1,           /* priority of the task */
-                  &keypadHandler,      /* Task handle to keep track of created task */
-                  0);          /* pin task to core 0 */                  
-  delay(500); 
+void LCD_Serial(){
+  //Serial Com to 2nd ESP for LCD output
 }
 
-//create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
-  
+void Serial_com(){
 
-//Task1code: blinks an LED every 1s
-void checkTemp( void * pvParameters ){
+
+}
+
+//Check_Temp: blinks an LED every 1s
+void Check_Temp( void * pvParameters ){
   
     while(1){
-    Serial.print("Task1 running on core ");
+    Serial.print("Check_Temp running on core ");
     Serial.println(xPortGetCoreID());
 
-    digitalWrite(RedLED, HIGH);
-    delay(1000);
-    digitalWrite(RedLED, LOW);
-    delay(1000);
+    
+
+    
   } 
 }
 
-//Task2code: blinks an LED every 500 ms
-void logger( void * pvParameters ){
+//Logger_Handlercode: blinks an LED every 500 ms
+void Logger( void * pvParameters ){
    
     while(1){
-    Serial.print("Task2 running on core ");
+    Serial.print("Logger_Handler running on core ");
     Serial.println(xPortGetCoreID());
 
-    digitalWrite(YelLED, HIGH);
-    delay(500);
-    digitalWrite(YelLED, LOW);
-    delay(500);
+    
   }
-
-}
-void IOT( void * pvParameters ){
-
 }
 
-void resourceMonitor( void * pvParameters ){
+//IoT: blinks an LED every 500 ms
+void IoT( void * pvParameters ){
+   
+    while(1){
+    Serial.print("IoT_Handler running on core ");
+    Serial.println(xPortGetCoreID());
+
+    
+  }
+}
+
+
+void Resources_Monitor( void * pvParameters ){
+   
+    while(1){
+    Serial.print("Resources_Monitor_Handler running on core ");
+    Serial.println(xPortGetCoreID());
+
+    
+  }
+}
+
+
+
+void setup() {
+  Serial.begin(115200); 
+  
+  //IO Initialization
+  pinMode(Venti, OUTPUT);
+  pinMode(Heat, OUTPUT);
+  pinMode(Cool, OUTPUT);
+
+  pinMode(Temp_Sensor1, INPUT);
+  pinMode(Temp_Sensor2, INPUT);
+  pinMode(Feed_sensor1, INPUT);
+  pinMode(Feed_sensor2, INPUT);
+  pinMode(Feed_sensor3, INPUT);
+  pinMode(Feed_sensor4, INPUT);
+  pinMode(Feed_sensor5, INPUT);
+  pinMode(Water_sensor, INPUT);
+
+
+  //create a task that will be executed in the Check_Temp() function, with priority 1 and executed on core 0
+  xTaskCreatePinnedToCore(
+                    Check_Temp,   /* Task function. */
+                    "Check_Temp_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        /* parameter of the task */
+                    1,           /* priority of the task */
+                    &Check_Temp_Handler,      /* Task handle to keep track of created task */
+                    0);          /* pin task to core 0 */                  
+  delay(500); 
+
+  //create a task that will be executed in the Logger() function, with priority 1 and executed on core 1
+  xTaskCreatePinnedToCore(
+                    Logger,   /* Task function. */
+                    "Logger_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        // parameter of the task 
+                    1,           /* priority of the task */
+                    &Logger_Handler,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 1 */
+    delay(500); 
+
+     //create a task that will be executed in the IoT() function, with priority 1 and executed on core 1
+  xTaskCreatePinnedToCore(
+                    IoT,   /* Task function. */
+                    "IoT_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        // parameter of the task 
+                    1,           /* priority of the task */
+                    &IoT_Handler,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 1 */
+    delay(500); 
+
+        //create a task that will be executed in the IoT() function, with priority 1 and executed on core 1
+  xTaskCreatePinnedToCore(
+                    Resources_Monitor,   /* Task function. */
+                    "Resources_Monitor_Handler",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        // parameter of the task 
+                    1,           /* priority of the task */
+                    &Resources_Monitor_Handler,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 1 */
+    delay(500); 
+  
 
 }
 
-void keypad( void * pvParameters ){
-//saves the input and menu choices, including the id and number of animals. Saved data will be processed at logger.
-}
 
-void LCD(){
 
-}
+
+
 void loop() {
   
 }
-
-
