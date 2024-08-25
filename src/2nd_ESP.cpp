@@ -276,6 +276,7 @@ void Control_sys(){
 
     if (key!='A')
     {
+        cont=static_cast<CONTROL>(j);
         com=Controlsys;
         SerialCom();
     }
