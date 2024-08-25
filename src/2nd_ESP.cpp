@@ -390,7 +390,7 @@ void Registration(){
     i=0;
     ID=0;
     //Animal ID input
-    i=2;
+    i=0;
     ID=0;
     //Animal ID input
     while(key!='A'){
@@ -406,8 +406,8 @@ void Registration(){
             break;
 
         else if (int(key)>=0 && int(key)<=9){
-            ID+=int(key)*pow(10,i);
-            i--;
+            ID=int(key)+ID*pow(10,i);
+            i++;
             delay(200);
         }  
     }
