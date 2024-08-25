@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <list>
 // include the library code:
+#include <cmath>
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 
@@ -25,7 +26,6 @@ byte colPins[KP_COLS] = {2, 4, 5, 18}; //connect to the column pinouts of the kp
 Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins,KP_ROWS, KP_COLS );
 
 
-
 /*Variables from ESP1*/
 int Temp1=1; //Temperature for enclosure 1
 int Humi1=10; //Humidity for enclosure 1
@@ -39,22 +39,121 @@ ANIMAL ani;
 enum STATE {SalesDelivery,Recovery,Deceased};
 STATE reg;
 
-enum CONTROL {Ventilation, Cooler, Heater, OFF, ON};
+int ID;
+
+enum CONTROL {VentilationOn, VentilationOff, CoolerOn, CoolerOff, 
+HeaterOn, HeaterOff};
 CONTROL cont;
 
-int ID ={};
-
-/*Input*/
-char16_t key; 
 
 
+/*Internal Variables*/
+char16_t key; //keypad input 
+int i=0;      //universal
+String received_data;
+
+enum Communication {Update, Control};
+Communication com;
 
 /*--------------Functions--------------*/
-void SerialCom(){
+//Waiting for Serial Response
+void wait_response();
+//Send serial to ESP1
+void SerialCom();
+//check serial communication input
+void Check_serial();
+//Clear and Display String at LCD for 1s
+void Post(String event);
+//Registration of animals 
+void Registration();
+//Display Temp and Humid at LCD
+void LCD_Temp();
+
+void setup() {
+  // set up the LCD's number of columns and rows:
+  lcd.begin(LCD_COLS, LCD_ROWS);
+  Serial.begin(115200);
+  // Print a message to the LCD, indicate the LCD is working
+  lcd.print("LCD is powered on");
+  delay(1000);
+  LCD_Temp();
+}
+ 
+void loop() {
+  Check_serial();
+  if (kpd.getKey()=='#')
+    Registration();
+    Post("Back To Main...");
+    LCD_Temp();
 
 }
 
-//Clear and Display String for 1s
+//Waiting for Serial Response
+void wait_response(){
+    while (Serial.available()==0){
+            delay(1);
+            //waiting response
+        }
+    //read the response msg
+    received_data=Serial.readString();    
+}
+
+//Send serial to ESP1
+void SerialCom(){
+    if (com==0)//Update
+    {
+        Serial.println("Register");
+        wait_response();
+        
+        /*UPDATE the registration info*/
+        Serial.print(reg); 
+        wait_response();
+        Serial.print(ani);
+        wait_response();
+        Serial.print(ID);
+        wait_response();
+    }
+
+    else if (com==1)//Control
+    {
+        Serial.println("Control");
+        wait_response();
+        Serial.println(cont);
+        wait_response();
+    }
+
+}
+
+//check serial communication input
+void Check_serial(){
+    received_data="";
+    
+    //Check if any data is sent to ESP2
+    if (Serial.available()==1){
+        received_data=Serial.readString();
+    }
+
+    //Update Temperature and Humidity
+    if (received_data=="Temp"){
+        Serial.println("OK");
+        wait_response();
+        Temp1=received_data.toInt();
+        Serial.println("OK");
+        wait_response();
+        Humi1=received_data.toInt();
+        Serial.println("OK");
+        wait_response();
+        Temp2=received_data.toInt();
+        Serial.println("OK");
+        wait_response();
+        Humi2=received_data.toInt();
+        
+        //Update the data at LCD
+        LCD_Temp();
+    }
+}
+
+//Clear and Display String at LCD for 1s
 void Post(String event){
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -62,6 +161,7 @@ void Post(String event){
     delay(1000);
 }
 
+//Registration of animals 
 void Registration(){
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -69,66 +169,133 @@ void Registration(){
     lcd.setCursor(0, 1);
     lcd.print("Animals");
     delay(1000);
-
     lcd.clear();
-    lcd.setCursor(0, 0);
+
     key='*';
-    lcd.print("1:Pig    A:EXIT");
-    lcd.setCursor(0, 1);
-    lcd.print("2:Chicken");
+    i=0;
+    while(key!='A'){
+        lcd.clear();
+        switch (i)
+        {
+        case 0:
+            lcd.setCursor(0, 0);
+            lcd.print("1:Sales/Delivery");
+            lcd.setCursor(0, 1);
+            lcd.print("2:Next    A:Exit");
+            break;
+        case 1:
+            lcd.setCursor(0, 0);
+            lcd.print("1:Recovery");
+            lcd.setCursor(0, 1);
+            lcd.print("2:Next    A:Exit");
+            break;
+        case 2:
+            lcd.setCursor(0, 0);
+            lcd.print("1:Deceased");
+            lcd.setCursor(0, 1);
+            lcd.print("2:Next    A:Exit");
+            break;
+        default:
+            i=0;
+            break;
+        }
 
-    while (key!='1' &&key!='2'  &&key!='A' ){
-        delay(1);
-        key=kpd.getKey();
-    }
-
-    lcd.clear();
-    switch (key)
-    {
-    case '1':
-        ani=Pig;
-        key='*';
-        break;
-    case '2':
-        ani=Chicken;
-        key='*';
-        break;
-    case 'A':
-        Post("Exiting...");
-        break;
-    default:
-        Post("Process Failed");
-        break;
-    }
-
-    int i=0;
-    if (key=='*'){
-        while(key!='A'){
-            if (i==0){
-                lcd.setCursor(0, 0);
-                lcd.print("1:Sales/Delivery");
-                lcd.setCursor(0, 1);
-                lcd.print("2:Next   A:Exit");
-            }
-            
-            else if (i==1)
-            {
-                /* code */
-            }
-
-            else if (i==2)
-            {
-                /* code */
-            }
-            
-            
+        while (key!='1' &&key!='2'  &&key!='A' ){
+            delay(1);
             key=kpd.getKey();
+        }
+
+        if (key=='1'){
+            reg=static_cast<STATE>(i);
+            key='*';
+            delay(200);
+            break;
+        }
+
+        else if (key=='2'){
+            i++;
+            key='*';
+            delay(200);
+        }
+            
+        else if (key=='A') 
+            break;
+        
+        else{
+            Post("Process Failed");
+            key='A';
+            break;
         }
     }
 
+    lcd.clear();
+    
+    
+    if (key!='A'){
+        lcd.setCursor(0, 0);
+        lcd.print("1:Pig    A:EXIT");
+        lcd.setCursor(0, 1);
+        lcd.print("2:Chicken");
+        key='*';
 
+        while (key!='1' &&key!='2'  &&key!='A' ){
+            delay(1);
+            key=kpd.getKey(); 
+            }
+
+        lcd.clear();
+        switch (key)
+        {
+        case '1':
+            ani=Pig;
+            key='*';
+            break;
+        case '2':
+            ani=Chicken;
+            key='*';
+            break;
+        case 'A':
+            Post("Exiting...");
+            break;
+        default:
+            Post("Process Failed");
+            key='A';
+            break;
+        }
+    }
+    
+    
+    i=0;
+    ID=0;
+    while(key!='A'){
+        lcd.setCursor(0, 0);
+        lcd.printf("Animal ID: %.3",ID);
+        lcd.setCursor(0, 1);
+        lcd.print("C:Confirm A:Exit");
+
+        key='*';
+        key=kpd.getKey();
+
+        if (key=='A' || key=='C')
+            break;
+
+        else if (int(key)>=0 && int(key)<=9){
+            ID+=int(key)*pow(10,i);
+            i++;
+            delay(200);
+        }  
+    }
+
+    if(key=='C'){
+        com=Update;
+        SerialCom();
+        Post("Registering...");
+    }
+
+    key='*';
 }
 
+//Display Temp and Humid at LCD
 void LCD_Temp(){
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
@@ -137,24 +304,4 @@ void LCD_Temp(){
   lcd.printf("Temp : %.2d", Temp1, "  ", "%.2d", Temp2);
   lcd.setCursor(0, 1);
   lcd.printf("Humid: %.2d", Humi1, "  ", "%.2d", Humi2); 
-}
-
-void setup() {
-  // set up the LCD's number of columns and rows:
-  lcd.begin(LCD_COLS, LCD_ROWS);
-  // Print a message to the LCD, indicate the LCD is working
-  lcd.print("LCD is powered on");
-  delay(1000);
-
-}
- 
-void loop() {
-  LCD_Temp();
-  ;
-  delay(1);
-
-  if (kpd.getKey()=='*')
-    Registration();
-    Post("Back To Main...");
-
 }
