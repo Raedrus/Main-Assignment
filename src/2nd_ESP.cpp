@@ -188,7 +188,7 @@ void Control_sys(){
     //Category Input
     while(key!='A'){
         lcd.clear();
-        key='*';
+        key='Z';
         switch (i)
         {
         case '0':
@@ -242,7 +242,7 @@ void Control_sys(){
 
     while(key!='A'){
         lcd.clear();
-        key='*';
+        key='Z';
         
         lcd.setCursor(0, 0);
         lcd.print("1:On");
@@ -274,7 +274,7 @@ void Control_sys(){
         }
     }
 
-    if (key!='A')
+    if (key!='A') // send the instruction to ESP1
     {
         cont=static_cast<CONTROL>(j);
         com=Controlsys;
@@ -298,7 +298,7 @@ void Registration(){
     //Category Input
     while(key!='A'){
         lcd.clear();
-        key='*';
+        key='Z';
         switch (i)
         {
         case '0':
@@ -358,7 +358,7 @@ void Registration(){
         lcd.print("1:Pig    A:EXIT");
         lcd.setCursor(0, 1);
         lcd.print("2:Chicken");
-        key='*';
+        key='Z';
 
         while (key!='1' &&key!='2'  &&key!='A' ){
             delay(1);
@@ -370,11 +370,11 @@ void Registration(){
         {
         case '1':
             ani=Pig;
-            key='*';
+            key='Z';
             break;
         case '2':
             ani=Chicken;
-            key='*';
+            key='Z';
             break;
         case 'A':
             Post("Exiting...");
@@ -390,16 +390,13 @@ void Registration(){
     i=0;
     ID=0;
     //Animal ID input
-    i=0;
-    ID=0;
-    //Animal ID input
     while(key!='A'){
         lcd.setCursor(0, 0);
         lcd.printf("Animal ID: %.3",ID);
         lcd.setCursor(0, 1);
         lcd.print("C:Confirm A:Exit");
 
-        key='*';
+        key='Z';
         key=kpd.getKey();
 
         if (key=='A' || key=='C')
@@ -418,7 +415,7 @@ void Registration(){
         Post("Registering...");
     }
 
-    key='*';
+    key='Z';
 }
 
 //Display Temp and Humid at LCD
@@ -431,3 +428,4 @@ void LCD_Temp(){
   lcd.setCursor(0, 1);
   lcd.printf("Humid: %.2d", Humi1, "  ", "%.2d", Humi2); 
 }
+
