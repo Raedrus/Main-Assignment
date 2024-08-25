@@ -12,8 +12,14 @@ int Humi1=10; //Humidity for enclosure 1
 int Temp2=9; //Temperature for enclosure 2
 int Humi2=10; //Humidity for enclosure 2
 
-void LCD_Post(){
+void Post(){
+    lcd.clear();
+    lcd.print("");
+}
 
+void Registration(){
+    lcd.clear();
+    lcd.print("");
 }
 
 void LCD_Temp(){
