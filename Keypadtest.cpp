@@ -17,7 +17,7 @@ Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 unsigned long loopCount;
 unsigned long startTime;
 unsigned long t_hold;
-char truekey;
+char holdKey;
 String msg;
 
 
@@ -40,42 +40,60 @@ void loop() {
 
     char key=kpd.getKey();
     
-   
-    if (key) {
-        if (key == '#') {
-            if (kpd.getState() == HOLD) {
-                // When the # key is being held
-                if ((millis() - t_hold) > 100) {
-                    Serial.print("Key: ");
-                    Serial.print(key);
-                    Serial.println(" is held.");
-                    
-                }
-            } 
-            // else if (kpd.getState() == RELEASED) {
+    if (key){
+    holdKey = key;
+    Serial.println(key);
+   }
+ 
+   if (kpd.getState() == HOLD) {
+      if ((millis() - t_hold) > 100 ) {
+          switch (holdKey) {
+              case '#':
+                Serial.println("# held");
+                break;
+              default:
+                break;
+          }
+          t_hold = millis();
+      }
+   }
+}
+    // if (key) {
+    //     if (key == '#') {
+            
+    //         if (kpd.getState() == HOLD) {
+    //             // When the # key is being held
+    //             if ((millis() - t_hold) > 100) {
+    //                 Serial.print("Key: ");
+    //                 Serial.print(key);
+    //                 Serial.println(" is held.");  
+    //             }
+    //             t_hold=millis();
+    //         } 
+    //         // else if (kpd.getState() == RELEASED) {
                 
-            //     // Handle quick press without hold
-            //     Serial.print("Key: ");
-            //     Serial.print(key);
-            //     Serial.println(" is released before hold time.");
-            // }
+    //         //     // Handle quick press without hold
+    //         //     Serial.print("Key: ");
+    //         //     Serial.print(key);
+    //         //     Serial.println(" is released before hold time.");
+    //         // }
             
-            t_hold = 0;
             
-        }
+            
+    //     }
      
-        else{
-            truekey=key;
-            Serial.print("Key: ");
-            Serial.print(truekey);
-            Serial.println(" is pressed.");
-            t_hold = 0;
+    //     else{
+    //         truekey=key;
+    //         Serial.print("Key: ");
+    //         Serial.print(truekey);
+    //         Serial.println(" is pressed.");
+    //         t_hold = 0;
             
-        }
-    } 
+    //     }
+    // } 
         
     
-}
+
 
     // Fills kpd.key[ ] array with up-to 10 active keys.
     // Returns true if there are ANY active keys.

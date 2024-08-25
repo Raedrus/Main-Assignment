@@ -1,32 +1,4 @@
 #include <Arduino.h>
-#include <list>
-// include the library code:
-#include <cmath>
-#include <LiquidCrystal.h>
-#include <Keypad.h>
-
-/*-------------LCD Initialization-------------*/
-// initialize the library with the numbers of the interface pins
-LiquidCrystal lcd(19, 23, 18, 17, 16, 15);
-const byte LCD_ROWS = 2; //four rows
-const byte LCD_COLS = 16; //three columns
-
-/*-------------KEYPAD Initialization-------------*/
-const byte KP_ROWS = 4; //four rows
-const byte KP_COLS = 4; //three columns
-char keys[KP_ROWS][KP_COLS] = {
-{'1','2','3','A'},
-{'4','5','6','B'},
-{'7','8','9','C'},
-{'*','0','#','D'}
-};
-byte rowPins[KP_ROWS] = {19, 21, 22,23}; //connect to the row pinouts of the kpd
-byte colPins[KP_COLS] = {2, 4, 5, 18}; //connect to the column pinouts of the kpd
-
-Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins,KP_ROWS, KP_COLS );
-
-
-/*Variables from ESP1*/
 #include <FreeRTOSConfig.h>
 
 
