@@ -52,7 +52,7 @@ char16_t key; //keypad input
 int i=0;      //universal
 String received_data;
 
-enum Communication {Update, Control};
+enum Communication {Update, Controlsys};
 Communication com;
 
 /*--------------Functions--------------*/
@@ -66,6 +66,8 @@ void Check_serial();
 void Post(String event);
 //Registration of animals 
 void Registration();
+//Control the system
+void Control_sys();
 //Display Temp and Humid at LCD
 void LCD_Temp();
 
@@ -81,8 +83,29 @@ void setup() {
  
 void loop() {
   Check_serial();
-  if (kpd.getKey()=='#')
-    Registration();
+  if (kpd.getKey()=='#'){
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("1:Registration");
+    lcd.setCursor(0, 1);
+    lcd.print("2:Control");
+    while (key!='1' &&key!='2' ){
+            delay(1);
+            key=kpd.getKey();
+        }
+    }
+    switch (key)
+    {
+    case '1':
+        Registration();
+        break;
+    case '2':
+        Control_sys();
+        break;
+    default:
+        break;
+    }
+    
     Post("Back To Main...");
     LCD_Temp();
 
@@ -111,7 +134,7 @@ void SerialCom(){
         send_wait(String(ID));
     }
 
-    else if (com==1)//Control
+    else if (com==1)//Controlsys
     {
         send_wait("Control");
         send_wait(String(cont));
@@ -152,6 +175,114 @@ void Post(String event){
     delay(1000);
 }
 
+void Control_sys(){
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("System Control");
+    delay(1000);
+    lcd.clear();
+
+    //Select option
+    i=0;
+    int j=0;
+    //Category Input
+    while(key!='A'){
+        lcd.clear();
+        key='*';
+        switch (i)
+        {
+        case '0':
+            lcd.setCursor(0, 0);
+            lcd.print("1:Ventilation");
+            lcd.setCursor(0, 1);
+            lcd.print("2:Next    A:Exit");
+            break;
+        case '1':
+            lcd.setCursor(0, 0);
+            lcd.print("1:Cooler");
+            lcd.setCursor(0, 1);
+            lcd.print("2:Next    A:Exit");
+            break;
+        case '2':
+            lcd.setCursor(0, 0);
+            lcd.print("1:Heater");
+            lcd.setCursor(0, 1);
+            lcd.print("2:Next    A:Exit");
+            break;
+        default:
+            i=0;
+            break;
+        }
+
+        while (key!='1' &&key!='2'  &&key!='A' ){
+            delay(1);
+            key=kpd.getKey();
+        }
+
+        if (key=='1'){
+            j=i*2;
+            delay(200);
+            break;
+        }
+
+        else if (key=='2'){
+            i++;
+            delay(200);
+        }
+            
+        else if (key=='A') 
+            break;
+        
+        else{
+            Post("Process Failed");
+            key='A';
+            break;
+        }
+    }
+
+    while(key!='A'){
+        lcd.clear();
+        key='*';
+        
+        lcd.setCursor(0, 0);
+        lcd.print("1:On");
+        lcd.setCursor(0, 1);
+        lcd.print("2:Off     A:Exit");
+              
+        while (key!='1' &&key!='2'  &&key!='A' ){
+            delay(1);
+            key=kpd.getKey();
+        }
+
+        if (key=='1'){
+            //j is even, meaning ON
+            break;
+        }
+
+        else if (key=='2'){
+            j++; //odd is off, originally is even
+            break;
+        }
+            
+        else if (key=='A') 
+            break;
+        
+        else{
+            Post("Process Failed");
+            key='A';
+            break;
+        }
+    }
+
+    if (key!='A')
+    {
+        com=Controlsys;
+        SerialCom();
+    }
+    
+    
+}
+
 //Registration of animals 
 void Registration(){
     lcd.clear();
@@ -162,26 +293,26 @@ void Registration(){
     delay(1000);
     lcd.clear();
 
-    key='*';
     i=0;
     //Category Input
     while(key!='A'){
         lcd.clear();
+        key='*';
         switch (i)
         {
-        case 0:
+        case '0':
             lcd.setCursor(0, 0);
             lcd.print("1:Sales/Delivery");
             lcd.setCursor(0, 1);
             lcd.print("2:Next    A:Exit");
             break;
-        case 1:
+        case '1':
             lcd.setCursor(0, 0);
             lcd.print("1:Recovery");
             lcd.setCursor(0, 1);
             lcd.print("2:Next    A:Exit");
             break;
-        case 2:
+        case '2':
             lcd.setCursor(0, 0);
             lcd.print("1:Deceased");
             lcd.setCursor(0, 1);
@@ -199,14 +330,12 @@ void Registration(){
 
         if (key=='1'){
             reg=static_cast<STATE>(i);
-            key='*';
             delay(200);
             break;
         }
 
         else if (key=='2'){
             i++;
-            key='*';
             delay(200);
         }
             
