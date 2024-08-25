@@ -1,8 +1,10 @@
 #include <Arduino.h>
-
+#include <list>
 // include the library code:
 #include <LiquidCrystal.h>
- 
+
+
+
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(19, 23, 18, 17, 16, 15);
 
@@ -12,14 +14,34 @@ int Humi1=10; //Humidity for enclosure 1
 int Temp2=9; //Temperature for enclosure 2
 int Humi2=10; //Humidity for enclosure 2
 
+/*Variables to ESP1*/
+enum STATE {SalesDelivery,Recovery,Deceased};
+STATE reg;
+
+enum CONTROL {Ventilation, Cooler, Heater, OFF, ON};
+CONTROL cont;
+
+int ID;
+
+/*Input*/
+String key = ""; 
+
+
+
+/*--------------Functions--------------*/
 void Post(){
     lcd.clear();
     lcd.print("");
 }
 
-void Registration(){
+void Registration(STATE *r, CONTROL *cont){
     lcd.clear();
-    lcd.print("");
+    lcd.setCursor(0, 0);
+    lcd.print("Registration of");
+    lcd.setCursor(0, 1);
+    lcd.print("Animals");
+    delay(1000);
+
 }
 
 void LCD_Temp(){
@@ -38,9 +60,14 @@ void setup() {
   // Print a message to the LCD, indicate the LCD is working
   lcd.print("LCD is powered on");
   delay(1000);
+
 }
  
 void loop() {
   LCD_Temp();
-  delay(500);
+  delay(1);
+  
+  if (key=="y")
+    Registration(&reg , &cont);
+
 }
