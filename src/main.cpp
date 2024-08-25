@@ -3,15 +3,15 @@
 
 
 TaskHandle_t Check_Temp_Handler;  // Check Temp + Climate Control
-TaskHandle_t Logger_Handler;      // Log Data 
-TaskHandle_t IoT_Handler;         // Check and Update for IoT 
+TaskHandle_t Logger_Handler;      // Log Data (variables, pc + update IoT)
+TaskHandle_t IoT_Handler;         // Check for IoT Input 
 TaskHandle_t Resources_Monitor_Handler;    // Check Feed (5) + Water Consumption    
 // TaskHandle_t Keypad_Check_Handler;      // Check Keypad_Check and the Input
 
 /*-----------------PLS CHANGE ACCORDING TO YOUR NEEDS------------------*/
 // IO pins
 /*INPUT*/
-/*Temperature And Humidity Sensor*/
+/*Temperature And Humidity Sensor (ON HOLD)*/
 const int Temp_Sensor1 = 4;    //DHT11
 const int Temp_Sensor2 = 12;   //DHT11
 
