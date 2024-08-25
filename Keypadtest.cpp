@@ -16,6 +16,8 @@ Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 unsigned long loopCount;
 unsigned long startTime;
+unsigned long t_hold;
+char truekey;
 String msg;
 
 
@@ -37,18 +39,44 @@ void loop() {
     // }
 
     char key=kpd.getKey();
-    if (key){
-        Serial.print("Key: ");
-        Serial.print(key);
-        Serial.println(" is pressed.");
-    }
-    if (kpd.getState() == HOLD) {
-      if(keyd == 'D'){
-      if ((millis() - t_hold) > 500) {
-
-      }
+    
+   
+    if (key) {
+        if (key == '#') {
+            if (kpd.getState() == HOLD) {
+                // When the # key is being held
+                if ((millis() - t_hold) > 100) {
+                    Serial.print("Key: ");
+                    Serial.print(key);
+                    Serial.println(" is held.");
+                    
+                }
+            } 
+            // else if (kpd.getState() == RELEASED) {
+                
+            //     // Handle quick press without hold
+            //     Serial.print("Key: ");
+            //     Serial.print(key);
+            //     Serial.println(" is released before hold time.");
+            // }
+            
+            t_hold = 0;
+            
         }
-    }
+     
+        else{
+            truekey=key;
+            Serial.print("Key: ");
+            Serial.print(truekey);
+            Serial.println(" is pressed.");
+            t_hold = 0;
+            
+        }
+    } 
+        
+    
+}
+
     // Fills kpd.key[ ] array with up-to 10 active keys.
     // Returns true if there are ANY active keys.
     // if (kpd.getKeys())
@@ -76,4 +104,4 @@ void loop() {
     //         }
     //     }
     // }
-}  // End loop
+  // End loop
