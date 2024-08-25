@@ -57,7 +57,7 @@ Communication com;
 
 /*--------------Functions--------------*/
 //Waiting for Serial Response
-void wait_response();
+void send_wait(String event);
 //Send serial to ESP1
 void SerialCom();
 //check serial communication input
@@ -89,7 +89,8 @@ void loop() {
 }
 
 //Waiting for Serial Response
-void wait_response(){
+void send_wait(String event){
+    Serial.print(event);
     while (Serial.available()==0){
             delay(1);
             //waiting response
@@ -102,24 +103,18 @@ void wait_response(){
 void SerialCom(){
     if (com==0)//Update
     {
-        Serial.println("Register");
-        wait_response();
+        send_wait("Register");
         
         /*UPDATE the registration info*/
-        Serial.print(reg); 
-        wait_response();
-        Serial.print(ani);
-        wait_response();
-        Serial.print(ID);
-        wait_response();
+        send_wait(String(reg));
+        send_wait(String(ani));
+        send_wait(String(ID));
     }
 
     else if (com==1)//Control
     {
-        Serial.println("Control");
-        wait_response();
-        Serial.println(cont);
-        wait_response();
+        send_wait("Control");
+        send_wait(String(cont));
     }
 
 }
@@ -135,17 +130,13 @@ void Check_serial(){
 
     //Update Temperature and Humidity
     if (received_data=="Temp"){
-        Serial.println("OK");
-        wait_response();
+        send_wait("OK");
         Temp1=received_data.toInt();
-        Serial.println("OK");
-        wait_response();
+        send_wait("OK");
         Humi1=received_data.toInt();
-        Serial.println("OK");
-        wait_response();
+        send_wait("OK");
         Temp2=received_data.toInt();
-        Serial.println("OK");
-        wait_response();
+        send_wait("OK");
         Humi2=received_data.toInt();
         
         //Update the data at LCD
@@ -173,6 +164,7 @@ void Registration(){
 
     key='*';
     i=0;
+    //Category Input
     while(key!='A'){
         lcd.clear();
         switch (i)
@@ -230,7 +222,7 @@ void Registration(){
 
     lcd.clear();
     
-    
+    //Animal Type Input
     if (key!='A'){
         lcd.setCursor(0, 0);
         lcd.print("1:Pig    A:EXIT");
@@ -267,6 +259,7 @@ void Registration(){
     
     i=0;
     ID=0;
+    //Animal ID input
     while(key!='A'){
         lcd.setCursor(0, 0);
         lcd.printf("Animal ID: %.3",ID);
