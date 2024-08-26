@@ -149,6 +149,7 @@ void Check_serial(){
     //Check if any data is sent to ESP2
     if (Serial.available()==1){
         received_data=Serial.readString();
+        received_data.trim();
     }
 
     //Update Temperature and Humidity
