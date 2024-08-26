@@ -46,7 +46,6 @@ HeaterOn, HeaterOff};
 CONTROL cont;
 
 
-
 /*Internal Variables*/
 char16_t key; //keypad input 
 int i=0;      //universal

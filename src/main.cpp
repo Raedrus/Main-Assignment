@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <FreeRTOSConfig.h>
+#include <vector>
 
 TaskHandle_t Serial_Com_Handler;  //Manages incoming serial data    
 TaskHandle_t Check_Temp_Handler;  // Check Temp + Climate Control
@@ -58,6 +59,14 @@ CONTROL cont;
 /*Internal Variables*/
 String received_msg;
 
+/*Structures*/
+const int max_reg=100;
+struct registry {
+    std::vector<int> animal_type; // Array to store the types of animals (e.g., "Pig", "Chicken")
+    std::vector<int> ID;         // Array to store the unique IDs of animals
+    int count=0;                      // Number of animals registered for delivery
+}salesdelivery, recovery, deceased;
+
 
 
 ///////////////////////////////////////////////////////////////
@@ -67,28 +76,68 @@ void LCD_Serial(){
   //Serial Com to 2nd ESP for LCD output
 }
 
+void serial_fetch(){
+  Serial.print("received");
+          
+  while (Serial.available()==0){
+    delay(10);
+  }
+  received_msg=Serial.readString();
+  received_msg.trim();
+}
+
+
+void registry_update(registry* x){  //Registry update function that takes in address of the struct variable
+  
+  Serial.print("received");
+  while (Serial.available()==0){
+    delay(10); 
+  }
+  received_msg=Serial.readString();
+  received_msg.trim();
+  x->animal_type.push_back(received_msg.toInt());
+
+  Serial.print("received");
+  while (Serial.available()==0){
+    delay(10); 
+  }
+  received_msg=Serial.readString();
+  received_msg.trim();
+  x->ID.push_back(received_msg.toInt());
+}
 
 //Serial_Com: receives and sorts incoming serial data.
 void Serial_Com( void * pvParameters ){
   
   while(1){
-    if (Serial.available()==0){
+    if (Serial.available()){
       delay(1);
       received_msg=Serial.readString();
       received_msg.trim();
 
-      if (received_msg=="Register"){
+        if (received_msg=="Register"){
+          Serial.print("received");
+          
+          serial_fetch();
+          reg=static_cast<STATE>(received_msg.toInt());
 
-      }
+          switch(reg){
+            case SalesDelivery:
+              registry_update(&salesdelivery);
+              break;
+            case Recovery:
+              registry_update(&recovery);
+              break;
+            case Deceased:
+              registry_update(&deceased);
+              break;
+            default:
+              break;
+          }
+        }
     }
-    
-  
-  
-  
-  
   }
-  
-}  
+} 
   
 
 //Check_Temp: blinks an LED every 1s
