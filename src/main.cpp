@@ -2,8 +2,10 @@
 #include <FreeRTOSConfig.h>
 #include <vector>
 
+using namespace std;
+
 TaskHandle_t Serial_Com_Handler;  //Manages incoming serial data    
-TaskHandle_t Check_Temp_Handler;  // Check Temp + Climate Control
+TaskHandle_t Check_Clim_Handler;  // Check Temp + Climate Control
 TaskHandle_t Logger_Handler;      // Log Data 
 TaskHandle_t IoT_Handler;         // Check and Update for IoT 
 TaskHandle_t Resources_Monitor_Handler;    // Check Feed (5) + Water Consumption
@@ -28,10 +30,12 @@ const int Feed_sensor5 = 12;   //
     
 /*OUTPUT*/
 /*Temperature And Humidity*/
-const int Venti = 4;           //YelLED
-const int Heat = 12;           //RedLED
-const int Cool = 4;            //BlueLED
-
+const int Venti1 = 4;           //YelLED
+const int Heater1 = 12;           //RedLED
+const int Cooler1 = 4;            //BlueLED
+const int Venti2 = 4;           //YelLED
+const int Heater2 = 12;           //RedLED
+const int Cooler2 = 4;            //BlueLED
 
 /*SERIAL COMMUNICATION*/
 const int rx_pin = 16;       //RX pin
@@ -42,10 +46,14 @@ int Temp1=1; //Temperature for enclosure 1
 int Humi1=10; //Humidity for enclosure 1
 int Temp2=9; //Temperature for enclosure 2
 int Humi2=10; //Humidity for enclosure 2
+bool ventilation=false;
+bool cooler=false;
+bool heater=false;
 
 /*Enumerations to match data coming from ESP2*/
 enum ANIMAL {Pig, Chicken};
 ANIMAL ani;
+ANIMAL enclosure;
 
 enum STATE {SalesDelivery,Recovery,Deceased};
 STATE reg;
@@ -58,14 +66,21 @@ CONTROL cont;
 
 /*Internal Variables*/
 String received_msg;
+int previous_temp;
+int previous_hum;
 
 /*Structures*/
 const int max_reg=100;
 struct registry {
-    std::vector<int> animal_type; // Array to store the types of animals (e.g., "Pig", "Chicken")
-    std::vector<int> ID;         // Array to store the unique IDs of animals
-    int count=0;                      // Number of animals registered for delivery
+  vector<int> animal_type; // Array to store the types of animals (e.g., "Pig", "Chicken")
+  vector<int> ID;         // Array to store the unique IDs of animals
+  int count=0;                      // Number of animals registered for delivery
 }salesdelivery, recovery, deceased;
+
+struct climate_data{
+  vector<int> temp;
+  vector<int> hum;
+}enclosure1,enclosure2,prev_enclosure1,prev_enclosure2;
 
 
 
@@ -86,7 +101,57 @@ void serial_fetch(){
   received_msg.trim();
 }
 
+bool check_clim_ifchange(){
+  if (prev_enclosure1.temp.back()!=enclosure1.temp.back()
+  ||prev_enclosure1.hum.back()!=enclosure1.hum.back()
+  ||prev_enclosure2.temp.back()!=enclosure2.temp.back()
+  ||prev_enclosure2.hum.back()!=enclosure2.hum.back()){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
 
+void clim_control(){
+  //Enclosure 1
+  if (Temp1>=30){
+    digitalWrite(Cooler1,HIGH);
+  }
+  else if (25<Temp1<30){
+    digitalWrite(Cooler1,LOW);
+    digitalWrite(Heater1,LOW);
+  }
+  else{
+    digitalWrite(Heater1,HIGH);
+  }
+
+  if (Humi1>=70){
+    digitalWrite(Venti1,HIGH);
+  }
+  else{
+    digitalWrite(Venti1,LOW);
+  }
+
+  //Enclosure 2
+  if (Temp2>=30){
+    digitalWrite(Cooler2,HIGH);
+  }
+  else if (25<Temp2<30){
+    digitalWrite(Cooler2,LOW);
+    digitalWrite(Heater2,LOW);
+  }
+  else{
+    digitalWrite(Heater2,HIGH);
+  }
+
+  if (Humi2>=70){
+    digitalWrite(Venti2,HIGH);
+  }
+  else{
+    digitalWrite(Venti2,LOW);
+  }
+}
 void registry_update(registry* x){  //Registry update function that takes in address of the struct variable
   
   Serial.print("received");
@@ -104,23 +169,23 @@ void registry_update(registry* x){  //Registry update function that takes in add
   received_msg=Serial.readString();
   received_msg.trim();
   x->ID.push_back(received_msg.toInt());
+  Serial.print("received");
+
+  x->count++;
 }
+
 
 //Serial_Com: receives and sorts incoming serial data.
 void Serial_Com( void * pvParameters ){
   
   while(1){
     if (Serial.available()){
-      delay(1);
       received_msg=Serial.readString();
       received_msg.trim();
 
         if (received_msg=="Register"){
-          Serial.print("received");
-          
           serial_fetch();
           reg=static_cast<STATE>(received_msg.toInt());
-
           switch(reg){
             case SalesDelivery:
               registry_update(&salesdelivery);
@@ -135,20 +200,79 @@ void Serial_Com( void * pvParameters ){
               break;
           }
         }
+        if (received_msg=="Control"){
+          serial_fetch();
+          enclosure=static_cast<ANIMAL>(received_msg.toInt());
+          if (enclosure==Pig){
+            serial_fetch();
+            switch(cont){
+              case (VentilationOn):
+                digitalWrite(Venti1,HIGH);
+                break;
+              case (VentilationOff):
+                digitalWrite(Venti1,LOW);
+                break;
+              case (CoolerOn):
+                digitalWrite(Cooler1,HIGH);
+                break;
+              case (CoolerOff):
+                digitalWrite(Cooler1,LOW);
+                break;
+              case (HeaterOn):
+                digitalWrite(Heater1,HIGH);
+                break;
+              case (HeaterOff):
+                digitalWrite(Heater1,LOW);
+                break;
+              default:
+                break;
+            }
+          }
+          if (enclosure==Chicken){
+            serial_fetch();
+            switch(cont){
+              case (VentilationOn):
+                digitalWrite(Venti2,HIGH);
+                break;
+              case (VentilationOff):
+                digitalWrite(Venti2,LOW);
+                break;
+              case (CoolerOn):
+                digitalWrite(Cooler2,HIGH);
+                break;
+              case (CoolerOff):
+                digitalWrite(Cooler2,LOW);
+                break;
+              case (HeaterOn):
+                digitalWrite(Heater2,HIGH);
+                break;
+              case (HeaterOff):
+                digitalWrite(Heater2,LOW);
+                break;
+              default:
+                break;
+            }
+          }
+        }
     }
   }
-} 
-  
+}  
 
 //Check_Temp: blinks an LED every 1s
-void Check_Temp( void * pvParameters ){
+void Check_Clim( void * pvParameters ){
   
-    while(1){
-    Serial.print("Check_Temp running on core ");
-    Serial.println(xPortGetCoreID());
+  while(1){
+  Serial.print("Check_Temp running on core ");
+  Serial.println(xPortGetCoreID());
 
 
+    //fetch temperature and hum from sensor code;
 
+
+    //check if the values have changed.
+  if (check_clim_ifchange()){
+
+  }
     
   } 
 }
@@ -192,9 +316,12 @@ void setup() {
   Serial.begin(115200); 
   
   //IO Initialization
-  pinMode(Venti, OUTPUT);
-  pinMode(Heat, OUTPUT);
-  pinMode(Cool, OUTPUT);
+  pinMode(Venti1, OUTPUT);
+  pinMode(Heater1, OUTPUT);
+  pinMode(Cooler1, OUTPUT);
+  pinMode(Venti2, OUTPUT);
+  pinMode(Heater2, OUTPUT);
+  pinMode(Cooler2, OUTPUT);
 
   pinMode(Temp_Sensor1, INPUT);
   pinMode(Temp_Sensor2, INPUT);
@@ -219,12 +346,12 @@ void setup() {
 
   //create a task that will be executed in the Check_Temp() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
-                    Check_Temp,   /* Task function. */
-                    "Check Temperature",     /* name of task. */
+                    Check_Clim,   /* Task function. */
+                    "Check CLimate",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
                     1,           /* priority of the task */
-                    &Check_Temp_Handler,      /* Task handle to keep track of created task */
+                    &Check_Clim_Handler,      /* Task handle to keep track of created task */
                     0);          /* pin task to core 0 */                  
   delay(500); 
 

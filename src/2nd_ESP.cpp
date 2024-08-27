@@ -35,6 +35,7 @@ int Humi2=10; //Humidity for enclosure 2
 /*Variables to ESP1*/
 enum ANIMAL {Pig, Chicken};
 ANIMAL ani;
+ANIMAL enclosure;
 
 enum STATE {SalesDelivery,Recovery,Deceased};
 STATE reg;
