@@ -68,7 +68,7 @@ void Control_sys();
 //Display Temp and Humid at LCD
 void LCD_Temp();
 
-//Class for Display at LED: 
+//Class for Display at LCD: 
 class Post
 {
 private:
