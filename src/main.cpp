@@ -30,12 +30,21 @@ const int Feed_sensor5 = 12;   //
     
 /*OUTPUT*/
 /*Temperature And Humidity*/
-const int Venti1 = 4;           //YelLED
-const int Heater1 = 12;           //RedLED
-const int Cooler1 = 4;            //BlueLED
-const int Venti2 = 4;           //YelLED
-const int Heater2 = 12;           //RedLED
-const int Cooler2 = 4;            //BlueLED
+struct control_pins{
+  const int Venti;
+  const int Heater;
+  const int Cooler;
+}en1,en2;
+control_pins en1 = {4, 5, 6};
+control_pins en2 = {7, 8, 9};
+
+
+// const int Venti1 = 4;           //YelLED
+// const int Heater1 = 12;           //RedLED
+// const int Cooler1 = 4;            //BlueLED
+// const int Venti2 = 4;           //YelLED
+// const int Heater2 = 12;           //RedLED
+// const int Cooler2 = 4;            //BlueLED
 
 /*SERIAL COMMUNICATION*/
 const int rx_pin = 16;       //RX pin
@@ -116,44 +125,67 @@ void serial_fetch(){
 void clim_control(){
   //Enclosure 1
   if (Temp1>=30){
-    digitalWrite(Cooler1,HIGH);
+    digitalWrite(en1.Cooler,HIGH);
   }
   else if (25<Temp1<30){
-    digitalWrite(Cooler1,LOW);
-    digitalWrite(Heater1,LOW);
+    digitalWrite(en1.Cooler,LOW);
+    digitalWrite(en1.Heater,LOW);
   }
   else{
-    digitalWrite(Heater1,HIGH);
+    digitalWrite(en1.Heater,HIGH);
   }
 
   if (Humi1>=70){
-    digitalWrite(Venti1,HIGH);
+    digitalWrite(en1.Venti,HIGH);
   }
   else{
-    digitalWrite(Venti1,LOW);
+    digitalWrite(en1.Venti,LOW);
   }
 
   //Enclosure 2
   if (Temp2>=30){
-    digitalWrite(Cooler2,HIGH);
+    digitalWrite(en2.Cooler,HIGH);
   }
   else if (25<Temp2<30){
-    digitalWrite(Cooler2,LOW);
-    digitalWrite(Heater2,LOW);
+    digitalWrite(en2.Cooler,LOW);
+    digitalWrite(en2.Heater,LOW);
   }
   else{
-    digitalWrite(Heater2,HIGH);
+    digitalWrite(en2.Heater,HIGH);
   }
 
   if (Humi2>=70){
-    digitalWrite(Venti2,HIGH);
+    digitalWrite(en2.Venti,HIGH);
   }
   else{
-    digitalWrite(Venti2,LOW);
+    digitalWrite(en2.Venti,LOW);
   }
 }
 
-
+void user_clim_control(control_pins en_number, int control_type){
+  switch(control_type){
+    case (VentilationOn):
+      digitalWrite(en_number.Venti,HIGH);
+      break;
+    case (VentilationOff):
+      digitalWrite(en_number.Venti,LOW);
+      break;
+    case (CoolerOn):
+      digitalWrite(en_number.Cooler,HIGH);
+      break;
+    case (CoolerOff):
+      digitalWrite(en_number.Cooler,LOW);
+      break;
+    case (HeaterOn):
+      digitalWrite(en_number.Heater,HIGH);
+      break;
+    case (HeaterOff):
+      digitalWrite(en_number.Heater,LOW);
+      break;
+    default:
+      break;
+  }
+}
 void registry_update(registry* x){  //Registry update function that takes in address of the struct variable
   
   Serial.print("received");
@@ -208,59 +240,19 @@ void Serial_Com( void * pvParameters ){
           if (enclosure==Pig){
             serial_fetch();
             cont=static_cast<CONTROL>(received_msg.toInt());
-            switch(cont){
-              case (VentilationOn):
-                digitalWrite(Venti1,HIGH);
-                break;
-              case (VentilationOff):
-                digitalWrite(Venti1,LOW);
-                break;
-              case (CoolerOn):
-                digitalWrite(Cooler1,HIGH);
-                break;
-              case (CoolerOff):
-                digitalWrite(Cooler1,LOW);
-                break;
-              case (HeaterOn):
-                digitalWrite(Heater1,HIGH);
-                break;
-              case (HeaterOff):
-                digitalWrite(Heater1,LOW);
-                break;
-              default:
-                break;
+            user_clim_control(en1,cont);
             }
-          }
+        }
           if (enclosure==Chicken){
             serial_fetch();
             cont=static_cast<CONTROL>(received_msg.toInt());
-            switch(cont){
-              case (VentilationOn):
-                digitalWrite(Venti2,HIGH);
-                break;
-              case (VentilationOff):
-                digitalWrite(Venti2,LOW);
-                break;
-              case (CoolerOn):
-                digitalWrite(Cooler2,HIGH);
-                break;
-              case (CoolerOff):
-                digitalWrite(Cooler2,LOW);
-                break;
-              case (HeaterOn):
-                digitalWrite(Heater2,HIGH);
-                break;
-              case (HeaterOff):
-                digitalWrite(Heater2,LOW);
-                break;
-              default:
-                break;
-            }
-          }
+            user_clim_control(en2,cont);
+            
         }
     }
   }
-}  
+}
+ 
 
 //Check_Temp: blinks an LED every 1s
 void Check_Clim( void * pvParameters ){
@@ -317,13 +309,15 @@ void Resources_Monitor( void * pvParameters ){
 void setup() {
   Serial.begin(115200); 
   
+
+
   //IO Initialization
-  pinMode(Venti1, OUTPUT);
-  pinMode(Heater1, OUTPUT);
-  pinMode(Cooler1, OUTPUT);
-  pinMode(Venti2, OUTPUT);
-  pinMode(Heater2, OUTPUT);
-  pinMode(Cooler2, OUTPUT);
+  pinMode(en1.Venti, OUTPUT);
+  pinMode(en1.Heater, OUTPUT);
+  pinMode(en1.Cooler, OUTPUT);
+  pinMode(en2.Venti, OUTPUT);
+  pinMode(en2.Heater, OUTPUT);
+  pinMode(en2.Cooler, OUTPUT);
 
   pinMode(Temp_Sensor1, INPUT);
   pinMode(Temp_Sensor2, INPUT);
