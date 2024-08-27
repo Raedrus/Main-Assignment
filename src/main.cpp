@@ -237,15 +237,13 @@ void Serial_Com( void * pvParameters ){
         if (received_msg=="Control"){
           serial_fetch();
           enclosure=static_cast<ANIMAL>(received_msg.toInt());
+          serial_fetch();
+          cont=static_cast<CONTROL>(received_msg.toInt());
           if (enclosure==Pig){
-            serial_fetch();
-            cont=static_cast<CONTROL>(received_msg.toInt());
             user_clim_control(en1,cont);
             }
         }
           if (enclosure==Chicken){
-            serial_fetch();
-            cont=static_cast<CONTROL>(received_msg.toInt());
             user_clim_control(en2,cont);
             
         }
