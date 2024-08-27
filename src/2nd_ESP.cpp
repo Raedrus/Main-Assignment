@@ -61,8 +61,6 @@ void send_wait(String event);
 void SerialCom();
 //check serial communication input
 void Check_serial();
-//Clear and Display String at LCD for 1s
-void Post(String event);
 //Registration of animals 
 void Registration();
 //Control the system
@@ -70,13 +68,36 @@ void Control_sys();
 //Display Temp and Humid at LCD
 void LCD_Temp();
 
+//Class for Display at LED: 
+class Post
+{
+private:
+    /* data */
+public:
+    //Display String at LCD for 1s
+    void Show1s(String Event){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print(Event); 
+        delay(1000);
+    }
+    //For selection purpose
+    void Selection(String Event){
+        lcd.setCursor(0, 0);
+        lcd.print("1:");
+        lcd.print(Event);
+        lcd.setCursor(0, 1);
+        lcd.print("2:Next    A:Exit");
+    }
+};
+Post Display;
+
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(LCD_COLS, LCD_ROWS);
   Serial.begin(115200);
   // Print a message to the LCD, indicate the LCD is working
-  lcd.print("LCD is powered on");
-  delay(1000);
+  Display.Show1s("LCD is powered on");
   LCD_Temp();
 }
  
@@ -104,8 +125,7 @@ void loop() {
     default:
         break;
     }
-    
-    Post("Back To Main...");
+    Display.Show1s("Back To Main...");
     LCD_Temp();
 
 }
@@ -167,13 +187,6 @@ void Check_serial(){
     }
 }
 
-//Clear and Display String at LCD for 1s
-void Post(String event){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(event); 
-    delay(1000);
-}
 
 void Control_sys(){
     lcd.clear();
@@ -192,22 +205,13 @@ void Control_sys(){
         switch (i)
         {
         case '0':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Ventilation");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
+            Display.Selection("Ventilation");
             break;
         case '1':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Cooler");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
+            Display.Selection("Cooler");
             break;
         case '2':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Heater");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
+            Display.Selection("Heater");
             break;
         default:
             i=0;
@@ -234,7 +238,7 @@ void Control_sys(){
             break;
         
         else{
-            Post("Process Failed");
+            Display.Show1s("Process Failed");
             key='A';
             break;
         }
@@ -268,7 +272,7 @@ void Control_sys(){
             break;
         
         else{
-            Post("Process Failed");
+            Display.Show1s("Process Failed");
             key='A';
             break;
         }
@@ -286,135 +290,131 @@ void Control_sys(){
 
 //Registration of animals 
 void Registration(){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Registration of");
-    lcd.setCursor(0, 1);
-    lcd.print("Animals");
-    delay(1000);
-    lcd.clear();
-
-    i=0;
-    //Category Input
     while(key!='A'){
         lcd.clear();
-        key='Z';
-        switch (i)
-        {
-        case '0':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Sales/Delivery");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        case '1':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Recovery");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        case '2':
-            lcd.setCursor(0, 0);
-            lcd.print("1:Deceased");
-            lcd.setCursor(0, 1);
-            lcd.print("2:Next    A:Exit");
-            break;
-        default:
-            i=0;
-            break;
-        }
-
-        while (key!='1' &&key!='2'  &&key!='A' ){
-            delay(1);
-            key=kpd.getKey();
-        }
-
-        if (key=='1'){
-            reg=static_cast<STATE>(i);
-            delay(200);
-            break;
-        }
-
-        else if (key=='2'){
-            i++;
-            delay(200);
-        }
-            
-        else if (key=='A') 
-            break;
-        
-        else{
-            Post("Process Failed");
-            key='A';
-            break;
-        }
-    }
-
-    lcd.clear();
-    
-    //Animal Type Input
-    if (key!='A'){
         lcd.setCursor(0, 0);
-        lcd.print("1:Pig    A:EXIT");
+        lcd.print("Registration of");
         lcd.setCursor(0, 1);
-        lcd.print("2:Chicken");
-        key='Z';
+        lcd.print("Animals");
+        delay(1000);
+        lcd.clear();
 
-        while (key!='1' &&key!='2'  &&key!='A' ){
-            delay(1);
-            key=kpd.getKey(); 
+        i=0;
+        //Category Input
+        while(key!='A'){
+            lcd.clear();
+            key='Z';
+            switch (i)
+            {
+            case '0':
+                Display.Selection("Sales/Delivery");
+                break;
+            case '1':
+                Display.Selection("Recovery");
+                break;
+            case '2':
+                Display.Selection("Deceased");
+                break;
+            default:
+                i=0;
+                break;
             }
 
+            while (key!='1' &&key!='2'  &&key!='A' ){
+                delay(1);
+                key=kpd.getKey();
+            }
+
+            if (key=='1'){
+                reg=static_cast<STATE>(i);
+                delay(200);
+                break;
+            }
+
+            else if (key=='2'){
+                i++;
+                delay(200);
+            }
+                
+            else if (key=='A') 
+                break;
+            
+            else{
+                Display.Show1s("Process Failed");
+                key='A';
+                break;
+            }
+        }
+
         lcd.clear();
-        switch (key)
-        {
-        case '1':
-            ani=Pig;
+        
+        //Animal Type Input
+        if (key!='A'){
+            lcd.setCursor(0, 0);
+            lcd.print("1:Pig    A:EXIT");
+            lcd.setCursor(0, 1);
+            lcd.print("2:Chicken");
             key='Z';
-            break;
-        case '2':
-            ani=Chicken;
+
+            while (key!='1' &&key!='2'  &&key!='A' ){
+                delay(1);
+                key=kpd.getKey(); 
+                }
+
+            lcd.clear();
+            switch (key)
+            {
+            case '1':
+                ani=Pig;
+                key='Z';
+                break;
+            case '2':
+                ani=Chicken;
+                key='Z';
+                break;
+            case 'A':
+                Display.Show1s("Exiting...");
+                break;
+            default:
+                Display.Show1s("Process Failed");
+                key='A';
+                break;
+            }
+        }
+        
+        
+        i=0;
+        ID=0;
+        //Animal ID input
+        while(key!='A'){
+            lcd.setCursor(0, 0);
+            lcd.printf("Animal ID: %.3",ID);
+            lcd.setCursor(0, 1);
+            lcd.print("C:Confirm A:Exit");
+
             key='Z';
-            break;
-        case 'A':
-            Post("Exiting...");
-            break;
-        default:
-            Post("Process Failed");
-            key='A';
-            break;
+            key=kpd.getKey();
+
+            if (key=='A' || key=='C')
+                break;
+
+            else if (int(key)>=0 && int(key)<=9){
+                ID=int(key)+ID*pow(10,i);
+                i++;
+                delay(200);
+            }  
+        }
+
+        if(key=='C'){
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Registering...");
+            com=Update; //Set to Update config
+            SerialCom(); //Send data to the ESP1
+            Display.Show1s("Done");
         }
     }
-    
-    
-    i=0;
-    ID=0;
-    //Animal ID input
-    while(key!='A'){
-        lcd.setCursor(0, 0);
-        lcd.printf("Animal ID: %.3",ID);
-        lcd.setCursor(0, 1);
-        lcd.print("C:Confirm A:Exit");
-
-        key='Z';
-        key=kpd.getKey();
-
-        if (key=='A' || key=='C')
-            break;
-
-        else if (int(key)>=0 && int(key)<=9){
-            ID=int(key)+ID*pow(10,i);
-            i++;
-            delay(200);
-        }  
-    }
-
-    if(key=='C'){
-        com=Update;
-        SerialCom();
-        Post("Registering...");
-    }
-
+       
     key='Z';
 }
 
