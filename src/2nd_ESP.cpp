@@ -158,6 +158,7 @@ void SerialCom(){
     else if (com==1)//Controlsys
     {
         send_wait("Control");
+        send_wait(String(enclosure));
         send_wait(String(cont));
     }
 
@@ -191,12 +192,31 @@ void Check_serial(){
 
 
 void Control_sys(){
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("System Control");
-    delay(1000);
-    lcd.clear();
+    Display.Show1s("System Control");
+       
+    //Choose enclosure
+    while(key!='A'){
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.printf("Enclosure");
+        lcd.setCursor(0, 1);
+        lcd.print("1:Pig  2:Chicken");
 
+        key='Z';
+        key=kpd.getKey();
+
+        if (key=='1'){
+            enclosure=Pig;
+            break;
+        }
+
+        else if (key=='2'){
+            enclosure=Chicken;
+            break;
+        }       
+        
+    }
+    
     //Select option
     i=0;
     int j=0;
@@ -352,11 +372,12 @@ void Registration(){
         
         //Animal Type Input
         if (key!='A'){
+            key='Z';
             lcd.setCursor(0, 0);
             lcd.print("1:Pig    A:EXIT");
             lcd.setCursor(0, 1);
             lcd.print("2:Chicken");
-            key='Z';
+            
 
             while (key!='1' &&key!='2'  &&key!='A' ){
                 delay(1);
