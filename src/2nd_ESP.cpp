@@ -83,6 +83,7 @@ public:
     }
     //For selection purpose
     void Selection(String Event){
+        lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("1:");
         lcd.print(Event);
