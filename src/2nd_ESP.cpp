@@ -55,7 +55,7 @@ enum Communication {Update, Controlsys};
 Communication com;
 
 /*--------------Functions--------------*/
-//Waiting for Serial Response
+//Send + Waiting for Serial Response
 void send_wait(String event);
 //Send serial to ESP1
 void SerialCom();
@@ -131,7 +131,7 @@ void loop() {
 
 }
 
-//Waiting for Serial Response
+//Send + Waiting for Serial Response
 void send_wait(String event){
     Serial.print(event);
     while (Serial.available()==0){
