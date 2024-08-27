@@ -80,7 +80,7 @@ struct registry {
 struct climate_data{
   vector<int> temp;
   vector<int> hum;
-}enclosure1,enclosure2,prev_enclosure1,prev_enclosure2;
+}enclosure1,enclosure2;
 
 
 
@@ -101,17 +101,17 @@ void serial_fetch(){
   received_msg.trim();
 }
 
-bool check_clim_ifchange(){
-  if (prev_enclosure1.temp.back()!=enclosure1.temp.back()
-  ||prev_enclosure1.hum.back()!=enclosure1.hum.back()
-  ||prev_enclosure2.temp.back()!=enclosure2.temp.back()
-  ||prev_enclosure2.hum.back()!=enclosure2.hum.back()){
-    return true;
-  }
-  else{
-    return false;
-  }
-}
+// bool check_clim_ifchange(){
+//   if (prev_enclosure1.temp.back()!=enclosure1.temp.back()
+//   ||prev_enclosure1.hum.back()!=enclosure1.hum.back()
+//   ||prev_enclosure2.temp.back()!=enclosure2.temp.back()
+//   ||prev_enclosure2.hum.back()!=enclosure2.hum.back()){
+//     return true;
+//   }
+//   else{
+//     return false;
+//   }
+// }
 
 void clim_control(){
   //Enclosure 1
@@ -152,6 +152,8 @@ void clim_control(){
     digitalWrite(Venti2,LOW);
   }
 }
+
+
 void registry_update(registry* x){  //Registry update function that takes in address of the struct variable
   
   Serial.print("received");
@@ -205,6 +207,7 @@ void Serial_Com( void * pvParameters ){
           enclosure=static_cast<ANIMAL>(received_msg.toInt());
           if (enclosure==Pig){
             serial_fetch();
+            cont=static_cast<CONTROL>(received_msg.toInt());
             switch(cont){
               case (VentilationOn):
                 digitalWrite(Venti1,HIGH);
@@ -230,6 +233,7 @@ void Serial_Com( void * pvParameters ){
           }
           if (enclosure==Chicken){
             serial_fetch();
+            cont=static_cast<CONTROL>(received_msg.toInt());
             switch(cont){
               case (VentilationOn):
                 digitalWrite(Venti2,HIGH);
@@ -270,9 +274,7 @@ void Check_Clim( void * pvParameters ){
 
 
     //check if the values have changed.
-  if (check_clim_ifchange()){
-
-  }
+    clim_control();
     
   } 
 }
