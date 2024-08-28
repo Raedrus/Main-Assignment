@@ -34,9 +34,9 @@ struct control_pins{
   const int Venti;
   const int Heater;
   const int Cooler;
-}en1,en2;
-control_pins en1 = {4, 5, 6};
-control_pins en2 = {7, 8, 9};
+}en1={4,5,6},en2={7,8,9};
+// control_pins en1 = {4, 5, 6};
+// control_pins en2 = {7, 8, 9};
 
 
 // const int Venti1 = 4;           //YelLED
@@ -211,7 +211,7 @@ void registry_update(registry* x){  //Registry update function that takes in add
 
 //Serial_Com: receives and sorts incoming serial data.
 void Serial_Com( void * pvParameters ){
-  
+  Serial.println("hi");
   while(1){
     if (Serial.available()){
       received_msg=Serial.readString();
@@ -344,7 +344,7 @@ void setup() {
                     "Check CLimate",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
-                    1,           /* priority of the task */
+                    2,           /* priority of the task */
                     &Check_Clim_Handler,      /* Task handle to keep track of created task */
                     0);          /* pin task to core 0 */                  
   delay(500); 
@@ -355,7 +355,7 @@ void setup() {
                     "Data Logging",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    1,           /* priority of the task */
+                    3,           /* priority of the task */
                     &Logger_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
     delay(500); 
@@ -366,7 +366,7 @@ void setup() {
                     "IoT Manager",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    1,           /* priority of the task */
+                    4,           /* priority of the task */
                     &IoT_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
     delay(500); 
@@ -377,7 +377,7 @@ void setup() {
                     "Resources Monitor",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    1,           /* priority of the task */
+                    5,           /* priority of the task */
                     &Resources_Monitor_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
     delay(500); 
