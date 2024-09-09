@@ -20,8 +20,8 @@ char keys[KP_ROWS][KP_COLS] = {
 {'7','8','9','C'},
 {'*','0','#','D'}
 };
-byte rowPins[KP_ROWS] = {19, 21, 22,23}; //connect to the row pinouts of the kpd
-byte colPins[KP_COLS] = {2, 4, 5, 18}; //connect to the column pinouts of the kpd
+byte rowPins[ROWS] = {18, 5, 4, 15}; //connect to the row pinouts of the kpd
+byte colPins[COLS] = {23, 22, 21, 19}; //connect to the column pinouts of the kpd
 
 Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins,KP_ROWS, KP_COLS );
 
