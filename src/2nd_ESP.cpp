@@ -35,7 +35,7 @@ int Humi2=10; //Humidity for enclosure 2
 /*Variables to ESP1*/
 enum ANIMAL {Pig, Chicken};
 ANIMAL ani;
-ANIMAL enclosure;
+ANIMAL enclosure; 
 
 enum STATE {SalesDelivery,Recovery,Deceased};
 STATE reg;
@@ -172,22 +172,24 @@ void Check_serial(){
     if (Serial.available()==1){
         received_data=Serial.readString();
         received_data.trim();
+
+        //Update Temperature and Humidity
+        if (received_data=="Temp"){
+            send_wait("OK");
+            Temp1=received_data.toInt();
+            send_wait("OK");
+            Humi1=received_data.toInt();
+            send_wait("OK");
+            Temp2=received_data.toInt();
+            send_wait("OK");
+            Humi2=received_data.toInt();
+            
+            //Update the data at LCD
+            LCD_Temp();
+        }   
     }
 
-    //Update Temperature and Humidity
-    if (received_data=="Temp"){
-        send_wait("OK");
-        Temp1=received_data.toInt();
-        send_wait("OK");
-        Humi1=received_data.toInt();
-        send_wait("OK");
-        Temp2=received_data.toInt();
-        send_wait("OK");
-        Humi2=received_data.toInt();
-        
-        //Update the data at LCD
-        LCD_Temp();
-    }
+    
 }
 
 
@@ -281,12 +283,12 @@ void Control_sys(){
         }
 
         if (key=='1'){
-            //j is even, meaning ON
+            //when j is even, meaning ON
             break;
         }
 
         else if (key=='2'){
-            j++; //odd is off, originally is even
+            j++; //j odd is off, originally is even
             break;
         }
             
