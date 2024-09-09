@@ -20,17 +20,17 @@ char keys[KP_ROWS][KP_COLS] = {
 {'7','8','9','C'},
 {'*','0','#','D'}
 };
-byte rowPins[ROWS] = {18, 5, 4, 15}; //connect to the row pinouts of the kpd
-byte colPins[COLS] = {23, 22, 21, 19}; //connect to the column pinouts of the kpd
+byte rowPins[KP_ROWS] = {18, 5, 4, 15}; //connect to the row pinouts of the kpd
+byte colPins[KP_COLS] = {23, 22, 21, 19}; //connect to the column pinouts of the kpd
 
 Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins,KP_ROWS, KP_COLS );
 
 
 /*Variables from ESP1*/
-int Temp1=1; //Temperature for enclosure 1
-int Humi1=10; //Humidity for enclosure 1
-int Temp2=9; //Temperature for enclosure 2
-int Humi2=10; //Humidity for enclosure 2
+int Temp1=11; //Temperature for enclosure 1
+int Humi1=11; //Humidity for enclosure 1
+int Temp2=12; //Temperature for enclosure 2
+int Humi2=12; //Humidity for enclosure 2
 
 /*Variables to ESP1*/
 enum ANIMAL {Pig, Chicken};
@@ -115,7 +115,7 @@ void loop() {
             delay(1);
             key=kpd.getKey();
         }
-    }
+    
     switch (key)
     {
     case '1':
@@ -129,6 +129,7 @@ void loop() {
     }
     Display.Show1s("Back To Main...");
     LCD_Temp();
+  }
 
 }
 
@@ -326,17 +327,17 @@ void Registration(){
         i=0;
         //Category Input
         while(key!='A'){
-            lcd.clear();
+            
             key='Z';
             switch (i)
             {
-            case '0':
+            case 0:
                 Display.Selection("Sales/Delivery");
                 break;
-            case '1':
+            case 1:
                 Display.Selection("Recovery");
                 break;
-            case '2':
+            case 2:
                 Display.Selection("Deceased");
                 break;
             default:
@@ -413,7 +414,8 @@ void Registration(){
         //Animal ID input
         while(key!='A'){
             lcd.setCursor(0, 0);
-            lcd.printf("Animal ID: %.3",ID);
+            lcd.printf("Animal ID: ");
+            lcd.printf("%.3",ID);
             lcd.setCursor(0, 1);
             lcd.print("C:Confirm A:Exit");
 
@@ -449,8 +451,10 @@ void LCD_Temp(){
   // (note: line 1 is the second row, since counting begins with 0):
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.printf("Temp : %.2d", Temp1, "  ", "%.2d", Temp2);
+  lcd.printf("Temp : %.2d", Temp1);
+  lcd.printf("  %.2d", Temp2);
   lcd.setCursor(0, 1);
-  lcd.printf("Humid: %.2d", Humi1, "  ", "%.2d", Humi2); 
+  lcd.printf("Humid: %.2d", Humi1);
+  lcd.printf("  %.2d", Temp2); 
 }
 
