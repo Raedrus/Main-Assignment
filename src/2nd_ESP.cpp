@@ -7,7 +7,7 @@
 
 /*-------------LCD Initialization-------------*/
 // initialize the library with the numbers of the interface pins
-LiquidCrystal lcd(19, 23, 18, 17, 16, 15);
+LiquidCrystal lcd(14, 26, 27, 32, 33, 25); //RS, EN, D4, D5, D6, and D7
 const byte LCD_ROWS = 2; //four rows
 const byte LCD_COLS = 16; //three columns
 
