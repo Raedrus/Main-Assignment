@@ -1,9 +1,22 @@
 #include <Arduino.h>
 #include <FreeRTOSConfig.h>
 #include <vector>
-#include "DHT.h"
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
+
+#if defined(ESP32)
+  #include <WiFi.h>
+#elif defined(ESP8266)
+  #include <ESP8266WiFi.h>
+#endif
+#include <Firebase_ESP_Client.h>
+
+//Provide the token generation process info.
+#include "addons/TokenHelper.h"
+//Provide the RTDB payload printing info and other helper functions.
+#include "addons/RTDBHelper.h"
 
 
 using namespace std;
@@ -19,8 +32,8 @@ TaskHandle_t Resources_Monitor_Handler;    // Check Feed (5) + Water Consumption
 /*----------------------FOR FIREBASE DATA LOGGING -----------------------------*/
 
 // Please update your network credentials
-const char* ssid = "duabingor";
-const char* password = "Duabingorabc";
+const char* ssid = "nono";
+const char* password = "iamRaedrus";
 
 // Insert Firebase project API Key
 #define API_KEY "AIzaSyAKJmoPN1O9m2nqh40PAfdu-5Le0bnkmGk"
@@ -134,7 +147,7 @@ const int tx_pin = 17;       //TX pin
 /*Variables*/
 
 //count > 6 (60s), then log data once
-int count = 0;
+int tensecondscount = 0;
 
 //Initialise Temperature and Humidity values
 float Temp1=0; //Temperature for enclosure 1
@@ -301,12 +314,12 @@ void LCD_Serial(){
 }
 
 void serial_fetch(){ //to be used in Serial_Com
-  Serial.print("received");
+  Serial2.print("received");
           
-  while (Serial.available()==0){
+  while (Serial2.available()==0){
     delay(10);
   }
-  received_msg=Serial.readString();
+  received_msg=Serial2.readString();
   received_msg.trim();
 }
 
@@ -371,27 +384,27 @@ void user_clim_control(control_pins en_number, int control_type){
 
   switch(control_type){
     case (VentilationOn):
-      //digitalWrite(en_number.Venti,HIGH); 
+      digitalWrite(en_number.Venti,HIGH); 
       sendInt(outputPath + String(en_number.Venti), 1);
       break;
     case (VentilationOff):
-      //digitalWrite(en_number.Venti,LOW);
+      digitalWrite(en_number.Venti,LOW);
       sendInt(outputPath + String(en_number.Venti), 0);
       break;
     case (CoolerOn):
-      //digitalWrite(en_number.Cooler,HIGH);
+      digitalWrite(en_number.Cooler,HIGH);
       sendInt(outputPath + String(en_number.Cooler), 1);
       break;
     case (CoolerOff):
-      //digitalWrite(en_number.Cooler,LOW);
+      digitalWrite(en_number.Cooler,LOW);
       sendInt(outputPath + String(en_number.Cooler), 0);
       break;
     case (HeaterOn):
-      //digitalWrite(en_number.Heater,HIGH);
+      digitalWrite(en_number.Heater,HIGH);
       sendInt(outputPath + String(en_number.Heater), 1);
       break;
     case (HeaterOff):
-      //digitalWrite(en_number.Heater,LOW);
+      digitalWrite(en_number.Heater,LOW);
       sendInt(outputPath + String(en_number.Heater), 0);
       break;
     default:
@@ -401,22 +414,22 @@ void user_clim_control(control_pins en_number, int control_type){
 
 void registry_update(registry* x){  //Registry update function that takes in address of the struct variable
   
-  Serial.print("received");
-  while (Serial.available()==0){
+  Serial2.print("received");
+  while (Serial2.available()==0){
     delay(10); 
   }
-  received_msg=Serial.readString();
+  received_msg=Serial2.readString();
   received_msg.trim();
   x->animal_type.push_back(received_msg.toInt());
 
-  Serial.print("received");
-  while (Serial.available()==0){
+  Serial2.print("received");
+  while (Serial2.available()==0){
     delay(10); 
   }
-  received_msg=Serial.readString();
+  received_msg=Serial2.readString();
   received_msg.trim();
   x->ID.push_back(received_msg.toInt());
-  Serial.print("received");
+  Serial2.print("received");
 
   x->count++;
 }
@@ -426,8 +439,8 @@ void registry_update(registry* x){  //Registry update function that takes in add
 void Serial_Com( void * pvParameters ){
   Serial.println("hi");
   while(1){
-    if (Serial.available()){
-      received_msg=Serial.readString();
+    if (Serial2.available()){
+      received_msg=Serial2.readString();
       received_msg.trim();
 
         if (received_msg=="Register"){
@@ -469,8 +482,8 @@ void Serial_Com( void * pvParameters ){
 void Check_Clim( void * pvParameters ){
   
   while(1){
-  Serial.print("Check_Temp running on core ");
-  Serial.println(xPortGetCoreID());
+  // Serial.print("Check_Temp running on core ");
+  // Serial.println(xPortGetCoreID());
 
     //fetch temperature and hum from sensor code;
     Humi1 = dht1.readHumidity();
@@ -514,7 +527,7 @@ void Check_Clim( void * pvParameters ){
     clim_control();
 
     //OSTimeDlyHMSM(0,0,10,0); 
-    count += 1;
+    tensecondscount += 1;
 
   } 
 }
@@ -523,10 +536,10 @@ void Check_Clim( void * pvParameters ){
 void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can use OSTimeDlyHMSM(0,1,0,0)
    
     while(1){
-    Serial.print("Logger_Handler running on core ");
-    Serial.println(xPortGetCoreID());
+    // Serial.print("Logger_Handler running on core ");
+    // Serial.println(xPortGetCoreID());
 
-    if (count >= 6){
+    if (tensecondscount >= 6){  //Enters loop when count is equal to 6.
 
         // Set temperature and humidity readings in JSON1
         json1.set(tempPath1.c_str(), String(Temp1));
@@ -553,7 +566,7 @@ void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can 
         Serial.print(",");
         Serial.println(Humi2);  // End with a newline character
 
-      count = 0; //reset 60 seconds for next data logging
+      tensecondscount = 0; //reset at 60 seconds for next data logging
     }
 
   } //while(1)
@@ -564,8 +577,8 @@ void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can 
 void IoT( void * pvParameters ){
    
     while(1){
-    Serial.print("IoT_Handler running on core ");
-    Serial.println(xPortGetCoreID());
+    // Serial.print("IoT_Handler running on core ");
+    // Serial.println(xPortGetCoreID());
 
     
   }
@@ -575,8 +588,8 @@ void IoT( void * pvParameters ){
 void Resources_Monitor( void * pvParameters ){
    
     while(1){
-    Serial.print("Resources_Monitor_Handler running on core ");
-    Serial.println(xPortGetCoreID());
+    // Serial.print("Resources_Monitor_Handler running on core ");
+    // Serial.println(xPortGetCoreID());
 
     
   }
@@ -586,7 +599,7 @@ void Resources_Monitor( void * pvParameters ){
 
 void setup() {
   Serial.begin(115200); 
-  
+  Serial2.begin(115200);
   initWiFi();
 
   dht1.begin();
@@ -680,16 +693,16 @@ void setup() {
                     NULL,        // parameter of the task 
                     1,           /* priority of the task */
                     &Serial_Com_Handler,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 1 */
-    delay(500); 
+                    0);          /* pin task to core 1 */
+  delay(500); 
 
   //create a task that will be executed in the Check_Temp() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
                     Check_Clim,   /* Task function. */
                     "Check CLimate",     /* name of task. */
-                    10000,       /* Stack size of task */
+                    1000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
-                    2,           /* priority of the task */
+                    3,           /* priority of the task */
                     &Check_Clim_Handler,      /* Task handle to keep track of created task */
                     0);          /* pin task to core 0 */                  
   delay(500); 
@@ -700,10 +713,10 @@ void setup() {
                     "Data Logging",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    3,           /* priority of the task */
+                    4,           /* priority of the task */
                     &Logger_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
-    delay(500); 
+  delay(500); 
 
      //create a task that will be executed in the IoT() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
@@ -711,10 +724,10 @@ void setup() {
                     "IoT Manager",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    4,           /* priority of the task */
+                    2,           /* priority of the task */
                     &IoT_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
-    delay(500); 
+  delay(500); 
 
         //create a task that will be executed in the Resources_Monitor() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
@@ -724,8 +737,8 @@ void setup() {
                     NULL,        // parameter of the task 
                     5,           /* priority of the task */
                     &Resources_Monitor_Handler,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 1 */
-    delay(500); 
+                    0);          /* pin task to core 1 */
+  delay(500); 
 
   
   
