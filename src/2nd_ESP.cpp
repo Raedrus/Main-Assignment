@@ -61,7 +61,7 @@
 // //Send serial to ESP1
 // void SerialCom();
 // //check serial communication input
-// void Check_serial();
+// bool Check_serial();
 // //Registration of animals 
 // void Registration();
 // //Control the system
@@ -100,7 +100,8 @@
 //   Serial.begin(115200);
 //   Serial2.begin(115200);
 //   // Print a message to the LCD, indicate the LCD is working
-//   Display.Show1s("LCD is powered on");
+//   Display.Show1s("Waiting for ESP1");
+//   while(!Check_serial());
 //   LCD_Temp();
 // }
  
@@ -147,6 +148,7 @@
 
 // //Send serial to ESP1
 // void SerialCom(){
+//     Check_serial();
 //     if (com==0)//Update
 //     {
 //         send_wait("Register");
@@ -163,11 +165,10 @@
 //         send_wait(String(enclosure));
 //         send_wait(String(cont));
 //     }
-
 // }
 
 // //check serial communication input
-// void Check_serial(){
+// bool Check_serial(){
 //     received_data="";
     
 //     //Check if any data is sent to ESP2
@@ -185,13 +186,13 @@
 //             Temp2=received_data.toInt();
 //             send_wait("OK");
 //             Humi2=received_data.toInt();
-            
-//             //Update the data at LCD
-//             LCD_Temp();
 //         }   
+
+//         return true;
 //     }
 
-    
+//     else
+//         return false;
 // }
 
 
@@ -200,6 +201,7 @@
        
 //     //Choose enclosure
 //     while(key!='A'){
+//         delay(1.5);
 //         lcd.clear();
 //         lcd.setCursor(0, 0);
 //         lcd.printf("Enclosure");
@@ -226,24 +228,23 @@
 //     int j=0;
 //     //Category Input
 //     while(key!='A'){
-//         lcd.clear();
+//         delay(1.5);
 //         key='Z';
 //         switch (i)
 //         {
-//         case '0':
-//             Display.Selection("Ventilation");
-//             break;
-//         case '1':
+//         case 1:
 //             Display.Selection("Cooler");
 //             break;
-//         case '2':
+//         case 2:
 //             Display.Selection("Heater");
 //             break;
 //         default:
 //             i=0;
+//             Display.Selection("Ventilation");
 //             break;
 //         }
 
+//         key=kpd.getKey();
 //         while (key!='1' &&key!='2'  &&key!='A' ){
 //             delay(1);
 //             key=kpd.getKey();
@@ -251,13 +252,11 @@
 
 //         if (key=='1'){
 //             j=i*2;
-//             delay(200);
 //             break;
 //         }
 
 //         else if (key=='2'){
 //             i++;
-//             delay(200);
 //         }
             
 //         else if (key=='A') 
@@ -271,8 +270,10 @@
 //     }
 
 //     while(key!='A'){
-//         lcd.clear();
 //         key='Z';
+//         delay(1.5);
+//         lcd.clear();
+        
         
 //         lcd.setCursor(0, 0);
 //         lcd.print("1:On");
@@ -294,8 +295,10 @@
 //             break;
 //         }
             
-//         else if (key=='A') 
+//         else if (key=='A') {
 //             break;
+//         }
+            
         
 //         else{
 //             Display.Show1s("Process Failed");
@@ -306,9 +309,13 @@
 
 //     if (key!='A') // send the instruction to ESP1
 //     {
+//         lcd.clear();
+//         lcd.setCursor(0,0);
+//         lcd.print("Sending Command"); 
 //         cont=static_cast<CONTROL>(j);
 //         com=Controlsys;
 //         SerialCom();
+//         Display.Show1s("Done");  
 //     }
     
     
@@ -332,9 +339,6 @@
 //             key='Z';
 //             switch (i)
 //             {
-//             case 0:
-//                 Display.Selection("Sales/Delivery");
-//                 break;
 //             case 1:
 //                 Display.Selection("Recovery");
 //                 break;
@@ -343,6 +347,7 @@
 //                 break;
 //             default:
 //                 i=0;
+//                 Display.Selection("Sales/Delivery");
 //                 break;
 //             }
 
@@ -409,14 +414,13 @@
 //             }
 //         }
         
-        
-//         i=0;
+
 //         ID=0;
 //         //Animal ID input
 //         while(key!='A'){
 //             lcd.setCursor(0, 0);
 //             lcd.printf("Animal ID: ");
-//             lcd.printf("%.3",ID);
+//             lcd.printf("%.3d",ID);
 //             lcd.setCursor(0, 1);
 //             lcd.print("C:Confirm A:Exit");
 
@@ -426,9 +430,9 @@
 //             if (key=='A' || key=='C')
 //                 break;
 
-//             else if (int(key)>=0 && int(key)<=9){
-//                 ID=int(key)+ID*pow(10,i);
-//                 i++;
+//             //Change from ASCII to Normal Int
+//             else if (int(key)>=48 && int(key)<=57){
+//                 ID=int(key)-48+ID*10;
 //                 delay(200);
 //             }  
 //         }
@@ -450,12 +454,12 @@
 // void LCD_Temp(){
 //   // set the cursor to column 0, line 1
 //   // (note: line 1 is the second row, since counting begins with 0):
+//   delay(3);
 //   lcd.clear();
 //   lcd.setCursor(0, 0);
-//   lcd.printf("Temp : %.2d", Temp1);
+//   lcd.printf("Temp :  %.2d", Temp1);
 //   lcd.printf("  %.2d", Temp2);
 //   lcd.setCursor(0, 1);
-//   lcd.printf("Humid: %.2d", Humi1);
+//   lcd.printf("Humid:  %.2d", Humi1);
 //   lcd.printf("  %.2d", Temp2); 
 // }
-
