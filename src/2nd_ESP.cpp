@@ -101,7 +101,12 @@
 //   Serial2.begin(115200);
 //   // Print a message to the LCD, indicate the LCD is working
 //   Display.Show1s("Waiting for ESP1");
-//   while(!Check_serial());
+//   while(!Check_serial())
+//     {
+//         if (kpd.getKey()=='#'){
+//             break;
+//         }
+//     }
 //   LCD_Temp();
 // }
  
@@ -201,7 +206,6 @@
        
 //     //Choose enclosure
 //     while(key!='A'){
-//         delay(1.5);
 //         lcd.clear();
 //         lcd.setCursor(0, 0);
 //         lcd.printf("Enclosure");
@@ -209,7 +213,10 @@
 //         lcd.print("1:Pig  2:Chicken");
 
 //         key='Z';
-//         key=kpd.getKey();
+//         while (key!='1' &&key!='2'  &&key!='A' ){
+//             delay(1);
+//             key=kpd.getKey();
+//         }
 
 //         if (key=='1'){
 //             enclosure=Pig;
@@ -244,7 +251,6 @@
 //             break;
 //         }
 
-//         key=kpd.getKey();
 //         while (key!='1' &&key!='2'  &&key!='A' ){
 //             delay(1);
 //             key=kpd.getKey();
