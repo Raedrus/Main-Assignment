@@ -178,6 +178,8 @@ CONTROL cont;
 String received_msg;
 int previous_temp;
 int previous_hum;
+bool loadingLCD;
+bool logging;
 
 /*Structures*/
 const int max_reg=100;
@@ -423,7 +425,7 @@ void registry_update(registry* x){  //Registry update function that takes in add
   
   Serial2.print("received");
   while (Serial2.available()==0){
-    delay(10); 
+    vTaskDelay(1); 
   }
   received_msg=Serial2.readString();
   received_msg.trim();
@@ -431,7 +433,7 @@ void registry_update(registry* x){  //Registry update function that takes in add
 
   Serial2.print("received");
   while (Serial2.available()==0){
-    delay(10); 
+    vTaskDelay(1); 
   }
   received_msg=Serial2.readString();
   received_msg.trim();
@@ -444,8 +446,8 @@ void registry_update(registry* x){  //Registry update function that takes in add
 
 void LCD_Serial(){  //To update Temperature and Humidity display at LCD
 
-    Serial2.flush();
     
+    Serial2.flush();
     Serial2.print("Clim");
     // Serial.print("af clim");
     serial_wait();
@@ -467,7 +469,7 @@ void LCD_Serial(){  //To update Temperature and Humidity display at LCD
     Serial2.print(String(Humi2));
     // Serial.print("af humi");
     serial_wait();
-
+    
 }
 //Serial_Com: receives and sorts incoming serial data.
 void Serial_Com( void * pvParameters ){
@@ -508,7 +510,7 @@ void Serial_Com( void * pvParameters ){
         }
         Serial2.print("received");
     }
-    vTaskDelay(10);
+    vTaskDelay(1);
   }
   
 }
@@ -519,7 +521,7 @@ void Check_Clim( void * pvParameters ){
   while(1){
   // Serial.print("Check_Temp running on core ");
   // Serial.println(xPortGetCoreID());
-
+    
     //fetch temperature and hum from sensor code;
     Humi1 = dht1.readHumidity();
     Temp1 = dht1.readTemperature();
@@ -534,14 +536,7 @@ void Check_Clim( void * pvParameters ){
     Serial.println(F("Failed to read from DHT sensor 2!"));
     }
 
-    // Humi1=1;
-    // Humi2=1;
-
-    // Temp1=1;
-    // Temp2=1;
-    Serial.println(F("starting LCD serial"));
-    
-    Serial.println(F("END LCD serial"));
+  
 
     // Read values from potentiometers (resource consumption sensors)
     float ADCwaterLevel = analogRead(Water_sensor);      // Read from pin 32
@@ -574,11 +569,14 @@ void Check_Clim( void * pvParameters ){
     if ((millis()-previous_time) >= 10000){ //Check if the duration between current and previous time point is 10 seconds
       tensecondscount += 1; //Increment the number of 10 seconds that has passed.
       previous_time=millis(); //Refresh previous time point with current time.
+    
       LCD_Serial();
-    }
+      
+      }
+      
     
 
-    vTaskDelay(10);
+    vTaskDelay(1);
   } 
 }
 
@@ -588,7 +586,7 @@ void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can 
     while(1){
     // Serial.print("Logger_Handler running on core ");
     // Serial.println(xPortGetCoreID());
-
+      
       if (tensecondscount >= 6){  //Enters loop when count is equal to 6.
 
           // Set temperature and humidity readings in JSON1
@@ -618,7 +616,8 @@ void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can 
 
         tensecondscount = 0; //Reset at 60 seconds for next data logging 
       }
-      vTaskDelay(50);
+      
+      vTaskDelay(10);
     } //while(1)
   
 } //void Logger
@@ -732,7 +731,7 @@ void setup() {
                     NULL,        // parameter of the task 
                     1,           /* priority of the task */
                     &Serial_Com_Handler,      /* Task handle to keep track of created task */
-                    0);          /* pin task to core 1 */
+                    tskNO_AFFINITY);          /* pin task to core 1 */
   delay(50); 
 
   //create a task that will be executed in the Check_Temp() function, with priority 1 and executed on core 0
@@ -743,7 +742,7 @@ void setup() {
                     NULL,        /* parameter of the task */
                     1,           /* priority of the task */
                     &Check_Clim_Handler,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 0 */                  
+                    tskNO_AFFINITY);          /* pin task to core 0 */                  
   delay(50); 
 
   //create a task that will be executed in the Logger() function, with priority 1 and executed on core 1
@@ -754,7 +753,7 @@ void setup() {
                     NULL,        // parameter of the task 
                     2,           /* priority of the task */
                     &Logger_Handler,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 1 */
+                    tskNO_AFFINITY);          /* pin task to core 1 */
   delay(50); 
 
 }
