@@ -310,7 +310,17 @@ void streamTimeoutCallback(bool timeout){
 /* * * * * * * * * * Tasks and Functions * * * * * * * * * * */
 
 void LCD_Serial(){
-  //Serial Com to 2nd ESP for LCD output
+
+  Serial2.print("Temp");
+  while (Serial2.available()!=1);
+  Serial2.print(Temp1);
+  while (Serial2.available()!=1);
+  Serial2.print(Humi1);
+  while (Serial2.available()!=1);
+  Serial2.print(Temp2);
+  while (Serial2.available()!=1);
+  Serial2.print(Humi2);
+
 }
 
 void serial_fetch(){ //to be used in Serial_Com
