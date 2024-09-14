@@ -5,6 +5,7 @@
 #include <DHT.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
+#include <esp_task_wdt.h>
 
 #if defined(ESP32)
   #include <WiFi.h>
@@ -20,6 +21,8 @@
 
 
 using namespace std;
+
+
 
 TaskHandle_t Serial_Com_Handler;  //Manages incoming serial data    
 TaskHandle_t Check_Clim_Handler;  // Check Temp + Climate Control
@@ -47,7 +50,6 @@ const char* password = "iamRaedrus";
 
 
 /*--------------------------FIREBASE INITIALISATION----------------------------*/
-
 
 // Define Firebase objects
 FirebaseData stream;
@@ -120,7 +122,6 @@ const int Feed_sensor2 = 34;   //
 const int Feed_sensor3 = 35;   //
 const int Feed_sensor4 = 36;   //
 const int Feed_sensor5 = 39;   //
-
     
 /*OUTPUT*/
 /*Temperature And Humidity*/
@@ -131,7 +132,6 @@ struct control_pins{
 }en1={15,2,4},en2={5,18,19};
 // control_pins en1 = {4, 5, 6};
 // control_pins en2 = {7, 8, 9};
-
 
 // const int Venti1 = 4;           //YelLED
 // const int Heater1 = 12;           //RedLED
@@ -314,6 +314,8 @@ void LCD_Serial(){
 }
 
 void serial_fetch(){ //to be used in Serial_Com
+  delay(1000);
+  Serial2.flush();
   Serial2.print("received");
           
   while (Serial2.available()==0){
@@ -432,12 +434,11 @@ void registry_update(registry* x){  //Registry update function that takes in add
   Serial2.print("received");
 
   x->count++;
+  
 }
-
 
 //Serial_Com: receives and sorts incoming serial data.
 void Serial_Com( void * pvParameters ){
-  Serial.println("hi");
   while(1){
     if (Serial2.available()){
       received_msg=Serial2.readString();
@@ -474,9 +475,10 @@ void Serial_Com( void * pvParameters ){
             
         }
     }
+    vTaskDelay(100);
   }
+  
 }
- 
 
 //Check_Temp, update water and feed level to Cloud every 10 seconds 
 void Check_Clim( void * pvParameters ){
@@ -529,6 +531,7 @@ void Check_Clim( void * pvParameters ){
     //OSTimeDlyHMSM(0,0,10,0); 
     tensecondscount += 1;
 
+    vTaskDelay(500);
   } 
 }
 
@@ -579,7 +582,7 @@ void IoT( void * pvParameters ){
     while(1){
     // Serial.print("IoT_Handler running on core ");
     // Serial.println(xPortGetCoreID());
-
+    vTaskDelay(500);
     
   }
 }
@@ -591,16 +594,17 @@ void Resources_Monitor( void * pvParameters ){
     // Serial.print("Resources_Monitor_Handler running on core ");
     // Serial.println(xPortGetCoreID());
 
-    
+    vTaskDelay(500);
   }
 }
-
 
 
 void setup() {
   Serial.begin(115200); 
   Serial2.begin(115200);
   initWiFi();
+
+  esp_task_wdt_init(10, true);
 
   dht1.begin();
   dht2.begin();
@@ -624,6 +628,7 @@ void setup() {
 
   /*---------------------------------FIREBASE SETUP-----------------------------------*/
 
+  
 
   // Assign the api key (required)
   config.api_key = API_KEY;
@@ -669,7 +674,7 @@ void setup() {
   outputPath = databasePath + "/outputs/digital/";
 
   // Update database path for temperature sensor readings
-  sensorPath1 = databasePath +"/sensor1/";
+  sensorPath1 = databasePath +"/sensor1/";  
   sensorPath2 = databasePath +"/sensor2/";
 
   // Update database path for inputs
@@ -694,17 +699,17 @@ void setup() {
                     1,           /* priority of the task */
                     &Serial_Com_Handler,      /* Task handle to keep track of created task */
                     0);          /* pin task to core 1 */
-  delay(500); 
+  delay(50); 
 
   //create a task that will be executed in the Check_Temp() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
                     Check_Clim,   /* Task function. */
-                    "Check CLimate",     /* name of task. */
-                    1000,       /* Stack size of task */
+                    "Check Climate",     /* name of task. */
+                    10000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
-                    3,           /* priority of the task */
+                    5,           /* priority of the task */
                     &Check_Clim_Handler,      /* Task handle to keep track of created task */
-                    0);          /* pin task to core 0 */                  
+                    1);          /* pin task to core 0 */                  
   delay(500); 
 
   //create a task that will be executed in the Logger() function, with priority 1 and executed on core 1
@@ -713,10 +718,10 @@ void setup() {
                     "Data Logging",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    4,           /* priority of the task */
+                    3,           /* priority of the task */
                     &Logger_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
-  delay(500); 
+  delay(50); 
 
      //create a task that will be executed in the IoT() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
@@ -726,8 +731,8 @@ void setup() {
                     NULL,        // parameter of the task 
                     2,           /* priority of the task */
                     &IoT_Handler,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 1 */
-  delay(500); 
+                    0);          /* pin task to core 1 */
+  delay(50); 
 
         //create a task that will be executed in the Resources_Monitor() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
@@ -735,18 +740,15 @@ void setup() {
                     "Resources Monitor",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    5,           /* priority of the task */
+                    4,           /* priority of the task */
                     &Resources_Monitor_Handler,      /* Task handle to keep track of created task */
                     0);          /* pin task to core 1 */
-  delay(500); 
+  delay(50); 
 
   
   
 
 }
-
-
-
 
 
 void loop() {
