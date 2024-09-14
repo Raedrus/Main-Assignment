@@ -103,12 +103,21 @@ void setup() {
   Serial2.begin(115200);
   // Print a message to the LCD, indicate the LCD is working
   Display.Show1s("Waiting for ESP1");
-  while(!Check_serial())
-    {
-        if (kpd.getKey()=='#'){
+  while(1){
+    if (Serial2.available()==1){
+        received_data=Serial2.readString();
+        Display.Show1s(received_data);
+    }
+    if (kpd.getKey()=='#'){
             break;
         }
-    }
+  }
+//   while(!Check_serial())
+//     {
+//         if (kpd.getKey()=='#'){
+//             break;
+//         }
+//     }
   LCD_Temp();
 }
  
@@ -172,20 +181,10 @@ void SerialCom(){
 
     else if (com==Controlsys)//Controlsys
     {   
-        
-        Display.Show1s("inside com1");
         send_wait("Control");
-        Display.Show1s("after control");
-        Display.Show1s(received_data);
 
-        Serial.print(String(enclosure));
         send_wait(String(enclosure));
-        Display.Show1s("after enclo");
-        Display.Show1s(received_data);
-        
         send_wait(String(cont));
-        Display.Show1s("after cont");
-        Display.Show1s(received_data);
     }
 }
 

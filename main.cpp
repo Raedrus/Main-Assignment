@@ -27,10 +27,8 @@ using namespace std;
 TaskHandle_t Serial_Com_Handler;  //Manages incoming serial data    
 TaskHandle_t Check_Clim_Handler;  // Check Temp + Climate Control
 TaskHandle_t Logger_Handler;      // Log Data 
-TaskHandle_t IoT_Handler;         // Check and Update for IoT 
-TaskHandle_t Resources_Monitor_Handler;    // Check Feed (5) + Water Consumption
 
-// TaskHandle_t Keypad_Check_Handler;      // Check Keypad_Check and the Input
+
 
 /*----------------------FOR FIREBASE DATA LOGGING -----------------------------*/
 
@@ -310,26 +308,36 @@ void streamTimeoutCallback(bool timeout){
 
 ///////////////////////////////////////////////////////////////
 /* * * * * * * * * * Tasks and Functions * * * * * * * * * * */
+void serial_wait(){ //Wait for acknoledgement message
+  while (Serial2.available()==0){
+    vTaskDelay(10);
+  }
+}
 
 void LCD_Serial(){  //To update Temperature and Humidity display at LCD
-
+  Serial2.flush();
+  vTaskDelay(100);
   Serial2.print("Clim");
+  vTaskDelay(100);
+
+ 
+  vTaskDelay(100);
+  Serial.print("af clim");
   serial_wait();
   Serial2.print(Temp1);
+  
+  Serial.print("af temp");
   serial_wait();
   Serial2.print(Humi1);
   serial_wait();
   Serial2.print(Temp2);
   serial_wait();
   Serial2.print(Humi2);
+  Serial.print("af humi");
   serial_wait();
 }
 
-void serial_wait(){ //Wait for acknoledgement message
-  while (Serial2.available()!=1){
-    vTaskDelay(10);
-  }
-}
+
 
 void serial_fetch(){ //Trigger data fetch
   Serial2.flush();
@@ -513,12 +521,21 @@ void Check_Clim( void * pvParameters ){
     Temp2 = dht2.readTemperature();
 
     if (isnan(Humi1) || isnan(Temp1) ) {
-    Serial.println(F("Failed to read from DHT sensor!"));
+    Serial.println(F("Failed to read from DHT sensor 1!"));
     }
 
     if (isnan(Humi2) || isnan(Temp2) ) {
-    Serial.println(F("Failed to read from DHT sensor!"));
+    Serial.println(F("Failed to read from DHT sensor 2!"));
     }
+
+    Humi1=1;
+    Humi2=1;
+
+    Temp1=1;
+    Temp2=1;
+    Serial.println(F("starting LCD serial"));
+    // LCD_Serial();
+    Serial.println(F("END LCD serial"));
 
     // Read values from potentiometers (resource consumption sensors)
     float ADCwaterLevel = analogRead(Water_sensor);      // Read from pin 32
@@ -599,27 +616,6 @@ void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can 
   
 } //void Logger
 
-//IoT: blinks an LED every 500 ms (xyyx, not sure for what)
-void IoT( void * pvParameters ){
-   
-    while(1){
-    // Serial.print("IoT_Handler running on core ");
-    // Serial.println(xPortGetCoreID());
-    vTaskDelay(500);
-    
-  }
-}
-
-
-void Resources_Monitor( void * pvParameters ){
-   
-    while(1){
-    // Serial.print("Resources_Monitor_Handler running on core ");
-    // Serial.println(xPortGetCoreID());
-
-    vTaskDelay(500);
-  }
-}
 
 
 void setup() {
@@ -739,7 +735,7 @@ void setup() {
                     5,           /* priority of the task */
                     &Check_Clim_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 0 */                  
-  delay(500); 
+  delay(50); 
 
   //create a task that will be executed in the Logger() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
@@ -751,31 +747,6 @@ void setup() {
                     &Logger_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
   delay(50); 
-
-     //create a task that will be executed in the IoT() function, with priority 1 and executed on core 1
-  xTaskCreatePinnedToCore(
-                    IoT,   /* Task function. */
-                    "IoT Manager",     /* name of task. */
-                    10000,       /* Stack size of task */
-                    NULL,        // parameter of the task 
-                    2,           /* priority of the task */
-                    &IoT_Handler,      /* Task handle to keep track of created task */
-                    0);          /* pin task to core 1 */
-  delay(50); 
-
-        //create a task that will be executed in the Resources_Monitor() function, with priority 1 and executed on core 1
-  xTaskCreatePinnedToCore(
-                    Resources_Monitor,   /* Task function. */
-                    "Resources Monitor",     /* name of task. */
-                    10000,       /* Stack size of task */
-                    NULL,        // parameter of the task 
-                    4,           /* priority of the task */
-                    &Resources_Monitor_Handler,      /* Task handle to keep track of created task */
-                    0);          /* pin task to core 1 */
-  delay(50); 
-
-  
-  
 
 }
 
