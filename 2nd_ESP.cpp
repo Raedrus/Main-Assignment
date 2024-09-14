@@ -5,6 +5,8 @@
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 
+
+
 /*-------------LCD Initialization-------------*/
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(14, 26, 27, 32, 33, 25); //RS, EN, D4, D5, D6, and D7
@@ -136,6 +138,7 @@ void loop() {
     }
     Display.Show1s("Back To Main...");
     LCD_Temp();
+    key='Z';
   }
 
 }
@@ -156,7 +159,7 @@ void send_wait(String event){
 void SerialCom(){
     Check_serial();
     Display.Show1s("inside serialcom");
-    if (com==0)//Update
+    if (com==Update)//Update
     {
         send_wait("Register");
         
@@ -166,17 +169,22 @@ void SerialCom(){
         send_wait(String(ID));
     }
 
-    else if (com==1)//Controlsys
+    else if (com==Controlsys)//Controlsys
     {   
         
         Display.Show1s("inside com1");
         send_wait("Control");
         Display.Show1s("after control");
+        Display.Show1s(received_data);
+
         Serial.print(String(enclosure));
         send_wait(String(enclosure));
         Display.Show1s("after enclo");
+        Display.Show1s(received_data);
+        
         send_wait(String(cont));
         Display.Show1s("after cont");
+        Display.Show1s(received_data);
     }
 }
 
