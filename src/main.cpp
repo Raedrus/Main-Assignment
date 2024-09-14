@@ -324,12 +324,15 @@ void LCD_Serial(){
 }
 
 void serial_fetch(){ //to be used in Serial_Com
-  delay(1000);
+  
   Serial2.flush();
+
+  vTaskDelay(100);
+
   Serial2.print("received");
           
   while (Serial2.available()==0){
-    delay(10);
+    vTaskDelay(10);
   }
   received_msg=Serial2.readString();
   received_msg.trim();
@@ -351,44 +354,44 @@ void serial_fetch(){ //to be used in Serial_Com
 
 void clim_control(){
 
-  //Enclosure 1
-  if (Temp1>=30){
-    sendInt(outputPath + "4", 1); //eAn1.Cooler On
-  }
-  else if (25<Temp1<30){
-    sendInt(outputPath + "4", 0); //en1.Cooler Off
-    sendInt(outputPath + "2", 0); //en1.Heater Off    
-  }
-  else{
-    sendInt(outputPath + "2", 1); //en1.Heater On  
-  }
+  // //Enclosure 1
+  // if (Temp1>=30){
+  //   sendInt(outputPath + "4", 1); //eAn1.Cooler On
+  // }
+  // else if (25<Temp1<30){
+  //   sendInt(outputPath + "4", 0); //en1.Cooler Off
+  //   sendInt(outputPath + "2", 0); //en1.Heater Off    
+  // }
+  // else{
+  //   sendInt(outputPath + "2", 1); //en1.Heater On  
+  // }
 
-  if (Humi1>=70){
-    sendInt(outputPath + "15", 1); //en1.Venti On
-  }
-  else{
-    sendInt(outputPath + "15", 0); //en1.Venti Off
-  }
+  // if (Humi1>=70){
+  //   sendInt(outputPath + "15", 1); //en1.Venti On
+  // }
+  // else{
+  //   sendInt(outputPath + "15", 0); //en1.Venti Off
+  // }
 
-  //Enclosure 2
-  if (Temp2>=30){
-    sendInt(outputPath + "19", 1); //en2.Cooler On
-  }
-  else if (25<Temp2<30){
-    sendInt(outputPath + "19", 0); //en2.Cooler Off
-    sendInt(outputPath + "18", 0); //en2.Heater Off     
-  }
-  else{
-    sendInt(outputPath + "18", 1); //en2.Heater On  
-  }
+  // //Enclosure 2
+  // if (Temp2>=30){
+  //   sendInt(outputPath + "19", 1); //en2.Cooler On
+  // }
+  // else if (25<Temp2<30){
+  //   sendInt(outputPath + "19", 0); //en2.Cooler Off
+  //   sendInt(outputPath + "18", 0); //en2.Heater Off     
+  // }
+  // else{
+  //   sendInt(outputPath + "18", 1); //en2.Heater On  
+  // }
 
-  if (Humi2>=70){
-    sendInt(outputPath + "5", 1); //en2.Venti On
-  }
-  else{
-    digitalWrite(en2.Venti,LOW);
-    sendInt(outputPath + "5", 0); //en2.Venti Off
-  }
+  // if (Humi2>=70){
+  //   sendInt(outputPath + "5", 1); //en2.Venti On
+  // }
+  // else{
+  //   digitalWrite(en2.Venti,LOW);
+  //   sendInt(outputPath + "5", 0); //en2.Venti Off
+  // }
 
 } //void clim_control
 
@@ -484,6 +487,7 @@ void Serial_Com( void * pvParameters ){
             user_clim_control(en2,cont);
             
         }
+        Serial2.print("received");
     }
     vTaskDelay(100);
   }
