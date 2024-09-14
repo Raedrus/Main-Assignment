@@ -159,7 +159,6 @@ void send_wait(String event){
 //Send serial to ESP1
 void SerialCom(){
     Check_serial();
-    Display.Show1s("inside serialcom");
     if (com==Update)//Update
     {
         send_wait("Register");
@@ -172,20 +171,10 @@ void SerialCom(){
 
     else if (com==Controlsys)//Controlsys
     {   
-        
-        Display.Show1s("inside com1");
         send_wait("Control");
-        Display.Show1s("after control");
-        Display.Show1s(received_data);
-
-        Serial.print(String(enclosure));
-        send_wait(String(enclosure));
-        Display.Show1s("after enclo");
-        Display.Show1s(received_data);
-        
+    
+        send_wait(String(enclosure));    
         send_wait(String(cont));
-        Display.Show1s("after cont");
-        Display.Show1s(received_data);
     }
 }
 
