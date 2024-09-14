@@ -152,7 +152,8 @@ void send_wait(String event){
             //waiting response
         }
     //read the response msg
-    received_data=Serial2.readString();    
+    received_data=Serial2.readString();
+    received_data.trim();    
 }
 
 //Send serial to ESP1
@@ -198,7 +199,7 @@ bool Check_serial(){
         received_data.trim();
 
         //Update Temperature and Humidity
-        if (received_data=="Temp"){
+        if (received_data=="Clim"){
             send_wait("OK");
             Temp1=received_data.toInt();
             send_wait("OK");

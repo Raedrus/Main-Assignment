@@ -97,6 +97,7 @@ void initWiFi() {
     Serial.print('.');
     delay(1000);
   }
+
   Serial.println(WiFi.localIP());
   Serial.println();
 }
@@ -129,7 +130,7 @@ struct control_pins{
   const int Venti;
   const int Heater;
   const int Cooler;
-}en1={15,2,4},en2={5,18,19};
+}en1={19,5,18},en2={4,15,2};
 // control_pins en1 = {4, 5, 6};
 // control_pins en2 = {7, 8, 9};
 
@@ -144,7 +145,8 @@ struct control_pins{
 const int rx_pin = 16;       //RX pin
 const int tx_pin = 17;       //TX pin
 
-/*Variables*/
+/*------------------------Variables----------------------------*/
+unsigned long previous_time;  //Record previous time point
 
 //count > 6 (60s), then log data once
 int tensecondscount = 0;
@@ -309,27 +311,31 @@ void streamTimeoutCallback(bool timeout){
 ///////////////////////////////////////////////////////////////
 /* * * * * * * * * * Tasks and Functions * * * * * * * * * * */
 
-void LCD_Serial(){
+void LCD_Serial(){  //To update Temperature and Humidity display at LCD
 
-  Serial2.print("Temp");
-  while (Serial2.available()!=1);
+  Serial2.print("Clim");
+  serial_wait();
   Serial2.print(Temp1);
-  while (Serial2.available()!=1);
+  serial_wait();
   Serial2.print(Humi1);
-  while (Serial2.available()!=1);
+  serial_wait();
   Serial2.print(Temp2);
-  while (Serial2.available()!=1);
+  serial_wait();
   Serial2.print(Humi2);
-
+  serial_wait();
 }
 
-void serial_fetch(){ //to be used in Serial_Com
-  
-  Serial2.flush();
+void serial_wait(){ //Wait for acknoledgement message
+  while (Serial2.available()!=1){
+    vTaskDelay(10);
+  }
+}
 
+void serial_fetch(){ //Trigger data fetch
+  Serial2.flush();
   vTaskDelay(100);
 
-  Serial2.print("received");
+  Serial2.print("request");
           
   while (Serial2.available()==0){
     vTaskDelay(10);
@@ -353,74 +359,73 @@ void serial_fetch(){ //to be used in Serial_Com
 
 
 void clim_control(){
+  //Enclosure 1
+  if (Temp1>=30){
+    sendInt(outputPath + "4", 1); //eAn1.Cooler On
+  }
+  else if (25<Temp1<30){
+    sendInt(outputPath + "4", 0); //en1.Cooler Off
+    sendInt(outputPath + "2", 0); //en1.Heater Off    
+  }
+  else{
+    sendInt(outputPath + "2", 1); //en1.Heater On  
+  }
 
-  // //Enclosure 1
-  // if (Temp1>=30){
-  //   sendInt(outputPath + "4", 1); //eAn1.Cooler On
-  // }
-  // else if (25<Temp1<30){
-  //   sendInt(outputPath + "4", 0); //en1.Cooler Off
-  //   sendInt(outputPath + "2", 0); //en1.Heater Off    
-  // }
-  // else{
-  //   sendInt(outputPath + "2", 1); //en1.Heater On  
-  // }
+  if (Humi1>=70){
+    sendInt(outputPath + "15", 1); //en1.Venti On
+  }
+  else{
+    sendInt(outputPath + "15", 0); //en1.Venti Off
+  }
 
-  // if (Humi1>=70){
-  //   sendInt(outputPath + "15", 1); //en1.Venti On
-  // }
-  // else{
-  //   sendInt(outputPath + "15", 0); //en1.Venti Off
-  // }
+  //Enclosure 2
+  if (Temp2>=30){
+    sendInt(outputPath + "19", 1); //en2.Cooler On
+  }
+  else if (25<Temp2<30){
+    sendInt(outputPath + "19", 0); //en2.Cooler Off
+    sendInt(outputPath + "18", 0); //en2.Heater Off     
+  }
+  else{
+    sendInt(outputPath + "18", 1); //en2.Heater On  
+  }
 
-  // //Enclosure 2
-  // if (Temp2>=30){
-  //   sendInt(outputPath + "19", 1); //en2.Cooler On
-  // }
-  // else if (25<Temp2<30){
-  //   sendInt(outputPath + "19", 0); //en2.Cooler Off
-  //   sendInt(outputPath + "18", 0); //en2.Heater Off     
-  // }
-  // else{
-  //   sendInt(outputPath + "18", 1); //en2.Heater On  
-  // }
+  if (Humi2>=70){
+    sendInt(outputPath + "5", 1); //en2.Venti On
+  }
+  else{
+    digitalWrite(en2.Venti,LOW);
+    sendInt(outputPath + "5", 0); //en2.Venti Off
+  }
 
-  // if (Humi2>=70){
-  //   sendInt(outputPath + "5", 1); //en2.Venti On
-  // }
-  // else{
-  //   digitalWrite(en2.Venti,LOW);
-  //   sendInt(outputPath + "5", 0); //en2.Venti Off
-  // }
-
-} //void clim_control
+}
 
 void user_clim_control(control_pins en_number, int control_type){
 
   switch(control_type){
     case (VentilationOn):
       digitalWrite(en_number.Venti,HIGH); 
-      sendInt(outputPath + String(en_number.Venti), 1);
+      // sendInt(outputPath + String(en_number.Venti), 1);
       break;
     case (VentilationOff):
       digitalWrite(en_number.Venti,LOW);
-      sendInt(outputPath + String(en_number.Venti), 0);
+      // sendInt(outputPath + String(en_number.Venti), 0);
       break;
     case (CoolerOn):
       digitalWrite(en_number.Cooler,HIGH);
-      sendInt(outputPath + String(en_number.Cooler), 1);
+      // sendInt(outputPath + String(en_number.Cooler), 1);
       break;
     case (CoolerOff):
       digitalWrite(en_number.Cooler,LOW);
-      sendInt(outputPath + String(en_number.Cooler), 0);
+      // sendInt(outputPath + String(en_number.Cooler), 0);
       break;
     case (HeaterOn):
       digitalWrite(en_number.Heater,HIGH);
-      sendInt(outputPath + String(en_number.Heater), 1);
+      // sendInt(outputPath + String(en_number.Heater), 1);
       break;
     case (HeaterOff):
       digitalWrite(en_number.Heater,LOW);
-      sendInt(outputPath + String(en_number.Heater), 0);
+      // sendInt(outputPath + String(en_number.Heater), 0);
       break;
     default:
       break;
@@ -539,11 +544,15 @@ void Check_Clim( void * pvParameters ){
     sendFloat(inputPath + "36", feedLevel4);   // Feed sensor 4 reading
     sendFloat(inputPath + "39", feedLevel5);   // Feed sensor 5 reading
 
-    //check if the values have changed. (not sure what, xyyx)
+    //Control the climate based on current climate condition.
     clim_control();
 
-    //OSTimeDlyHMSM(0,0,10,0); 
-    tensecondscount += 1;
+    //10 seconds interval timer
+    if ((millis()-previous_time) >= 10000){ //Check if the duration between current and previous time point is 10 seconds
+      tensecondscount += 1; //Increment the number of 10 seconds that has passed.
+      previous_time=millis(); //Refresh previous time point with current time.
+    }
+    
 
     vTaskDelay(500);
   } 
@@ -583,7 +592,7 @@ void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can 
         Serial.print(",");
         Serial.println(Humi2);  // End with a newline character
 
-      tensecondscount = 0; //reset at 60 seconds for next data logging
+      tensecondscount = 0; //Reset at 60 seconds for next data logging 
     }
 
   } //while(1)
@@ -630,6 +639,12 @@ void setup() {
   pinMode(en2.Venti, OUTPUT);
   pinMode(en2.Heater, OUTPUT);
   pinMode(en2.Cooler, OUTPUT);
+  digitalWrite(en1.Venti, LOW);
+  digitalWrite(en1.Heater, LOW);
+  digitalWrite(en1.Cooler, LOW);
+  digitalWrite(en2.Venti, LOW);
+  digitalWrite(en2.Heater, LOW);
+  digitalWrite(en2.Cooler, LOW);
 
   pinMode(Temp_Sensor1, INPUT);
   pinMode(Temp_Sensor2, INPUT);
