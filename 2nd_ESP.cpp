@@ -29,10 +29,10 @@ Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins,KP_ROWS, KP_COLS );
 
 
 /*Variables from ESP1*/
-int Temp1=11; //Temperature for enclosure 1
-int Humi1=11; //Humidity for enclosure 1
-int Temp2=12; //Temperature for enclosure 2
-int Humi2=12; //Humidity for enclosure 2
+int Temp1; //Temperature for enclosure 1
+int Humi1; //Humidity for enclosure 1
+int Temp2; //Temperature for enclosure 2
+int Humi2; //Humidity for enclosure 2
 
 /*Variables to ESP1*/
 enum ANIMAL {Pig, Chicken};
@@ -103,21 +103,22 @@ void setup() {
   Serial2.begin(115200);
   // Print a message to the LCD, indicate the LCD is working
   Display.Show1s("Waiting for ESP1");
-  while(1){
-    if (Serial2.available()==1){
-        received_data=Serial2.readString();
-        Display.Show1s(received_data);
-    }
-    if (kpd.getKey()=='#'){
-            break;
-        }
-  }
-//   while(!Check_serial())
-//     {
-//         if (kpd.getKey()=='#'){
+//   while(1){
+//     if (Serial2.available()>1){
+//         received_data=Serial2.readString();
+//         received_data.trim();
+//         Display.Show1s(received_data);
+//     }
+//     if (kpd.getKey()=='#'){
 //             break;
 //         }
-//     }
+//   }
+  while(!Check_serial())
+    {
+        if (kpd.getKey()=='#'){
+            break;
+        }
+    }
   LCD_Temp();
 }
  
@@ -191,10 +192,10 @@ void SerialCom(){
 
 //check serial communication input
 bool Check_serial(){
-    received_data="";
+    // received_data="";
     
     //Check if any data is sent to ESP2
-    if (Serial2.available()==1){
+    if (Serial2.available()>1){
         received_data=Serial2.readString();
         received_data.trim();
 
@@ -477,12 +478,12 @@ void Registration(){
 void LCD_Temp(){
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
-  delay(3);
   lcd.clear();
+  delay(3);
   lcd.setCursor(0, 0);
-  lcd.printf("Temp :  %.2d", Temp1);
-  lcd.printf("  %.2d", Temp2);
+  lcd.printf("Temp :  %02d", Temp1);
+  lcd.printf("  %02d", Temp2);
   lcd.setCursor(0, 1);
-  lcd.printf("Humid:  %.2d", Humi1);
-  lcd.printf("  %.2d", Temp2); 
+  lcd.printf("Humid:  %02d", Humi1);
+  lcd.printf("  %02d", Humi2); 
 }

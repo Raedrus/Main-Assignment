@@ -23,7 +23,7 @@
 using namespace std;
 
 
-
+TaskHandle_t LCD_Serial_Handler;
 TaskHandle_t Serial_Com_Handler;  //Manages incoming serial data    
 TaskHandle_t Check_Clim_Handler;  // Check Temp + Climate Control
 TaskHandle_t Logger_Handler;      // Log Data 
@@ -314,34 +314,13 @@ void serial_wait(){ //Wait for acknoledgement message
   }
 }
 
-void LCD_Serial(){  //To update Temperature and Humidity display at LCD
-  Serial2.flush();
-  vTaskDelay(100);
-  Serial2.print("Clim");
-  vTaskDelay(100);
 
- 
-  vTaskDelay(100);
-  Serial.print("af clim");
-  serial_wait();
-  Serial2.print(Temp1);
-  
-  Serial.print("af temp");
-  serial_wait();
-  Serial2.print(Humi1);
-  serial_wait();
-  Serial2.print(Temp2);
-  serial_wait();
-  Serial2.print(Humi2);
-  Serial.print("af humi");
-  serial_wait();
-}
 
 
 
 void serial_fetch(){ //Trigger data fetch
   Serial2.flush();
-  vTaskDelay(100);
+  vTaskDelay(10);
 
   Serial2.print("request");
           
@@ -463,6 +442,33 @@ void registry_update(registry* x){  //Registry update function that takes in add
   
 }
 
+void LCD_Serial(){  //To update Temperature and Humidity display at LCD
+
+    Serial2.flush();
+    
+    Serial2.print("Clim");
+    // Serial.print("af clim");
+    serial_wait();
+    Serial2.flush();
+    
+    Serial2.print(String(Temp1));
+    // Serial.print("af temp");
+    serial_wait();
+    Serial2.flush();
+    
+    Serial2.print(String(Humi1));
+    serial_wait();
+    Serial2.flush();
+    
+    Serial2.print(String(Temp2));
+    serial_wait();
+    Serial2.flush();
+    
+    Serial2.print(String(Humi2));
+    // Serial.print("af humi");
+    serial_wait();
+
+}
 //Serial_Com: receives and sorts incoming serial data.
 void Serial_Com( void * pvParameters ){
   while(1){
@@ -502,7 +508,7 @@ void Serial_Com( void * pvParameters ){
         }
         Serial2.print("received");
     }
-    vTaskDelay(100);
+    vTaskDelay(10);
   }
   
 }
@@ -528,13 +534,13 @@ void Check_Clim( void * pvParameters ){
     Serial.println(F("Failed to read from DHT sensor 2!"));
     }
 
-    Humi1=1;
-    Humi2=1;
+    // Humi1=1;
+    // Humi2=1;
 
-    Temp1=1;
-    Temp2=1;
+    // Temp1=1;
+    // Temp2=1;
     Serial.println(F("starting LCD serial"));
-    // LCD_Serial();
+    
     Serial.println(F("END LCD serial"));
 
     // Read values from potentiometers (resource consumption sensors)
@@ -568,10 +574,11 @@ void Check_Clim( void * pvParameters ){
     if ((millis()-previous_time) >= 10000){ //Check if the duration between current and previous time point is 10 seconds
       tensecondscount += 1; //Increment the number of 10 seconds that has passed.
       previous_time=millis(); //Refresh previous time point with current time.
+      LCD_Serial();
     }
     
 
-    vTaskDelay(500);
+    vTaskDelay(10);
   } 
 }
 
@@ -582,37 +589,37 @@ void Logger( void * pvParameters ){ //NOTE to xyyx: instead of using count, can 
     // Serial.print("Logger_Handler running on core ");
     // Serial.println(xPortGetCoreID());
 
-    if (tensecondscount >= 6){  //Enters loop when count is equal to 6.
+      if (tensecondscount >= 6){  //Enters loop when count is equal to 6.
 
-        // Set temperature and humidity readings in JSON1
-        json1.set(tempPath1.c_str(), String(Temp1));
-        json1.set(humPath1.c_str(), String(Humi1));
-        json1.set(timePath1, "timestamp");
+          // Set temperature and humidity readings in JSON1
+          json1.set(tempPath1.c_str(), String(Temp1));
+          json1.set(humPath1.c_str(), String(Humi1));
+          json1.set(timePath1, "timestamp");
 
-        // Set temperature and humidity readings in JSON2
-        json2.set(tempPath2.c_str(), String(Temp2));
-        json2.set(humPath2.c_str(), String(Humi2));
-        json2.set(timePath2, "timestamp");
+          // Set temperature and humidity readings in JSON2
+          json2.set(tempPath2.c_str(), String(Temp2));
+          json2.set(humPath2.c_str(), String(Humi2));
+          json2.set(timePath2, "timestamp");
 
-        // Push JSON1 to Firebase
-        Serial.printf("Set json1... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath1.c_str(), &json1) ? "ok" : fbdo.errorReason().c_str());
+          // Push JSON1 to Firebase
+          Serial.printf("Set json1... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath1.c_str(), &json1) ? "ok" : fbdo.errorReason().c_str());
 
-        // Push JSON2 to Firebase
-        Serial.printf("Set json2... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath2.c_str(), &json2) ? "ok" : fbdo.errorReason().c_str());
+          // Push JSON2 to Firebase
+          Serial.printf("Set json2... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath2.c_str(), &json2) ? "ok" : fbdo.errorReason().c_str());
 
-        //For serial update via USB to PC
-        Serial.print(Temp1);
-        Serial.print(",");
-        Serial.print(Humi1);
-        Serial.print(",");
-        Serial.print(Temp2);
-        Serial.print(",");
-        Serial.println(Humi2);  // End with a newline character
+          //For serial update via USB to PC
+          Serial.print(Temp1);
+          Serial.print(",");
+          Serial.print(Humi1);
+          Serial.print(",");
+          Serial.print(Temp2);
+          Serial.print(",");
+          Serial.println(Humi2);  // End with a newline character
 
-      tensecondscount = 0; //Reset at 60 seconds for next data logging 
-    }
-
-  } //while(1)
+        tensecondscount = 0; //Reset at 60 seconds for next data logging 
+      }
+      vTaskDelay(50);
+    } //while(1)
   
 } //void Logger
 
@@ -623,7 +630,7 @@ void setup() {
   Serial2.begin(115200);
   initWiFi();
 
-  esp_task_wdt_init(10, true);
+  // esp_task_wdt_init(10, true);
 
   dht1.begin();
   dht2.begin();
@@ -715,6 +722,8 @@ void setup() {
 
   /*------------------------END OF FIREBASE SETUP-----------------------------------*/
 
+ 
+  
         //create a task that will be executed in the Serial_Com() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
                     Serial_Com,   /* Task function. */
@@ -732,7 +741,7 @@ void setup() {
                     "Check Climate",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
-                    5,           /* priority of the task */
+                    1,           /* priority of the task */
                     &Check_Clim_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 0 */                  
   delay(50); 
@@ -743,7 +752,7 @@ void setup() {
                     "Data Logging",     /* name of task. */
                     10000,       /* Stack size of task */
                     NULL,        // parameter of the task 
-                    3,           /* priority of the task */
+                    2,           /* priority of the task */
                     &Logger_Handler,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
   delay(50); 
