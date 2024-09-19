@@ -97,8 +97,6 @@ public:
 Post Display;
 
 void setup() {
-    pinMode(13,OUTPUT);
-
   // set up the LCD's number of columns and rows:
   lcd.begin(LCD_COLS, LCD_ROWS);
   Serial.begin(115200);
@@ -127,7 +125,6 @@ void setup() {
 void loop() {
   Check_serial();
   if (kpd.getKey()=='#'){
-    digitalWrite(13,HIGH);
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("1:Registration");
@@ -149,7 +146,6 @@ void loop() {
     default:
         break;
     }
-    digitalWrite(13,LOW);
     Display.Show1s("Back To Main...");
     LCD_Temp();
     key='Z';
@@ -160,25 +156,14 @@ void loop() {
 //Send + Waiting for Serial Response
 void send_wait(String event){
     Serial2.flush();
-    int c;
     Serial2.print(event);
-    Serial.print(event);
     while (Serial2.available()==0){
             delay(1);
-            c++;
-            if (c>100){
-                // Serial2.print(event);
-                // Serial.print(event);
-                c=0;
-            }
             //waiting response
         }
     //read the response msg
-    
     received_data=Serial2.readString();
-    Serial.println("REceivED");
-    // received_data.trim();  
-    Serial.println(received_data);  
+    received_data.trim();    
 }
 
 //Send serial to ESP1
@@ -213,25 +198,17 @@ bool Check_serial(){
     if (Serial2.available()>1){
         received_data=Serial2.readString();
         received_data.trim();
-        Serial.print(received_data);
+
         //Update Temperature and Humidity
         if (received_data=="Clim"){
-            Display.Show1s("Updating Temp...");
-            send_wait("OKTemp");
+            send_wait("OK");
             Temp1=received_data.toInt();
-            send_wait("OKTemp");
+            send_wait("OK");
             Humi1=received_data.toInt();
-            send_wait("OKTemp");
+            send_wait("OK");
             Temp2=received_data.toInt();
-            send_wait("OKTemp");
+            send_wait("OK");
             Humi2=received_data.toInt();
-            Serial2.print("OKTemp");
-
-            Serial.println(Temp1);
-            Serial.println(Humi1);
-            Serial.println(Temp2);
-            Serial.println(Humi2);
-            LCD_Temp();
         }   
 
         return true;
