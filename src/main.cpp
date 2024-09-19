@@ -121,7 +121,8 @@ const int Feed_sensor2 = 34;   //
 const int Feed_sensor3 = 35;   //
 const int Feed_sensor4 = 36;   //
 const int Feed_sensor5 = 39;   //
-    
+
+const int  CHECKPIN =21;
 /*OUTPUT*/
 /*Temperature And Humidity*/
 struct control_pins{
@@ -316,7 +317,7 @@ void serial_wait(String msg){ //Wait for acknoledgement message
   Serial2.print(msg);
   Serial.println(msg);
   received_msg = Serial2.readString();
-  while (received_msg!="OKTemp"){
+  while (received_msg!="OKTemp" && digitalRead(CHECKPIN)==LOW){
     esp_task_wdt_reset(); // Reset watchdog timer
     received_msg = Serial2.readString();
     c++;
@@ -467,8 +468,8 @@ void LCD_Serial(){  //To update Temperature and Humidity display at LCD
 
     Serial.print("printing temp to ESP32");
     Serial2.flush();
-    
-    // Serial.print("af clim");
+    if (!digitalRead(CHECKPIN)){
+        // Serial.print("af clim");
     serial_wait("Clim");
     Serial2.flush();
     
@@ -495,7 +496,13 @@ void LCD_Serial(){  //To update Temperature and Humidity display at LCD
     // Serial.print("af humi");
     data_send_str = String(Humi2);
     serial_wait(data_send_str);
+  
+    }
     
+    if (digitalRead(CHECKPIN)){
+    
+      Serial.println("esp2 is busy");
+    }
 }
 //Serial_Com: receives and sorts incoming serial data.
 void Serial_Com( void * pvParameters ){
@@ -701,6 +708,8 @@ void setup() {
   pinMode(Feed_sensor4, INPUT);
   pinMode(Feed_sensor5, INPUT);
   pinMode(Water_sensor, INPUT);
+
+  pinMode(CHECKPIN,INPUT_PULLDOWN);
 
   /*---------------------------------FIREBASE SETUP-----------------------------------*/
 
