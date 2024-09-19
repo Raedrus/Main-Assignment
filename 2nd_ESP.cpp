@@ -156,14 +156,25 @@ void loop() {
 //Send + Waiting for Serial Response
 void send_wait(String event){
     Serial2.flush();
+    int c;
     Serial2.print(event);
+    Serial.print(event);
     while (Serial2.available()==0){
             delay(1);
+            c++;
+            if (c>100){
+                // Serial2.print(event);
+                // Serial.print(event);
+                c=0;
+            }
             //waiting response
         }
     //read the response msg
+    
     received_data=Serial2.readString();
-    received_data.trim();    
+    Serial.println("REceivED");
+    // received_data.trim();  
+    Serial.println(received_data);  
 }
 
 //Send serial to ESP1
@@ -198,17 +209,24 @@ bool Check_serial(){
     if (Serial2.available()>1){
         received_data=Serial2.readString();
         received_data.trim();
-
+        Serial.print(received_data);
         //Update Temperature and Humidity
         if (received_data=="Clim"){
-            send_wait("OK");
+            send_wait("OKTemp");
             Temp1=received_data.toInt();
-            send_wait("OK");
+            send_wait("OKTemp");
             Humi1=received_data.toInt();
-            send_wait("OK");
+            send_wait("OKTemp");
             Temp2=received_data.toInt();
-            send_wait("OK");
+            send_wait("OKTemp");
             Humi2=received_data.toInt();
+            Serial2.print("OKTemp");
+
+            Serial.println(Temp1);
+            Serial.println(Humi1);
+            Serial.println(Temp2);
+            Serial.println(Humi2);
+            LCD_Temp();
         }   
 
         return true;
