@@ -97,6 +97,8 @@ public:
 Post Display;
 
 void setup() {
+    pinMode(13,OUTPUT);
+
   // set up the LCD's number of columns and rows:
   lcd.begin(LCD_COLS, LCD_ROWS);
   Serial.begin(115200);
@@ -125,6 +127,7 @@ void setup() {
 void loop() {
   Check_serial();
   if (kpd.getKey()=='#'){
+    digitalWrite(13,HIGH);
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("1:Registration");
@@ -146,6 +149,7 @@ void loop() {
     default:
         break;
     }
+    digitalWrite(13,LOW);
     Display.Show1s("Back To Main...");
     LCD_Temp();
     key='Z';
@@ -212,6 +216,7 @@ bool Check_serial(){
         Serial.print(received_data);
         //Update Temperature and Humidity
         if (received_data=="Clim"){
+            Display.Show1s("Updating Temp...");
             send_wait("OKTemp");
             Temp1=received_data.toInt();
             send_wait("OKTemp");
