@@ -410,31 +410,32 @@ void user_clim_control(control_pins en_number, int control_type){
   switch(control_type){
     case (VentilationOn):
       if (WiFi.status() == WL_CONNECTED){
-      digitalWrite(en_number.Venti,HIGH); 
-      idk = static_cast<int>(en_number.Venti);
-      Serial.print("i dk what to do");
-      sendInt(outputPath + String(idk) , 1);}
+       
+      // idk = static_cast<int>(en_number.Venti);
+      // Serial.print("i dk what to do");
+      sendInt(outputPath + String(en_number.Venti) , 1);}
+      digitalWrite(en_number.Venti,HIGH);
       // 
       break;
     case (VentilationOff):
       digitalWrite(en_number.Venti,LOW);
-      // sendInt(outputPath + String(en_number.Venti), 0);
+      sendInt(outputPath + String(en_number.Venti), 0);
       break;
     case (CoolerOn):
       digitalWrite(en_number.Cooler,HIGH);
-      // sendInt(outputPath + String(en_number.Cooler), 1);
+      sendInt(outputPath + String(en_number.Cooler), 1);
       break;
     case (CoolerOff):
       digitalWrite(en_number.Cooler,LOW);
-      // sendInt(outputPath + String(en_number.Cooler), 0);
+      sendInt(outputPath + String(en_number.Cooler), 0);
       break;
     case (HeaterOn):
       digitalWrite(en_number.Heater,HIGH);
-      // sendInt(outputPath + String(en_number.Heater), 1);
+      sendInt(outputPath + String(en_number.Heater), 1);
       break;
     case (HeaterOff):
       digitalWrite(en_number.Heater,LOW);
-      // sendInt(outputPath + String(en_number.Heater), 0);
+      sendInt(outputPath + String(en_number.Heater), 0);
       break;
     default:
       break;
@@ -655,13 +656,13 @@ void Check_Clim( void * pvParameters ){
     clim_control();
 
     //10 seconds interval timer
-    // if ((millis()-previous_time) >= 30000){ //Check if the duration between current and previous time point is 10 seconds
-    //   tensecondscount += 1; //Increment the number of 10 seconds that has passed.
-    //   previous_time=millis(); //Refresh previous time point with current time.
-    //   LCD_Serial();
+    if ((millis()-previous_time) >= 30000){ //Check if the duration between current and previous time point is 10 seconds
+      tensecondscount += 1; //Increment the number of 10 seconds that has passed.
+      previous_time=millis(); //Refresh previous time point with current time.
+      LCD_Serial();
       
       
-    //   }
+      }
       
     
 
