@@ -6,6 +6,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <esp_task_wdt.h>
+#include <esp_sleep.h>
 
 #if defined(ESP32)
   #include <WiFi.h>
@@ -324,7 +325,7 @@ void serial_wait(String msg){ //Wait for acknoledgement message
     if (c>400){
       c=0;
       Serial2.print(msg);
-      // Serial2.print(msg);
+      Serial.print(msg);
       // Serial.print(msg);
     }
     vTaskDelay(2);
@@ -467,7 +468,7 @@ void registry_update(registry* x){  //Registry update function that takes in add
 
 void LCD_Serial(){  //To update Temperature and Humidity display at LCD
 
-    Serial.print("printing temp to ESP32");
+    Serial.println("printing temp to ESP32");
     Serial2.flush();
     if (!digitalRead(CHECKPIN)){
         // Serial.print("af clim");
@@ -633,7 +634,7 @@ void Check_Clim( void * pvParameters ){
     float ADCfeedLevel4 = analogRead(Feed_sensor4);      // Read from pin 36
 
     float ADCfeedLevel5 = analogRead(Feed_sensor5);      // Read from pin 39
-    vTaskDelay(10000);
+   
 
     // Convert ADC values to percentage
     float waterLevel = ADCwaterLevel/4100*100;      // Read from pin 32
@@ -654,7 +655,12 @@ void Check_Clim( void * pvParameters ){
     Logger();
     //Control the climate based on current climate condition.
     clim_control();
-
+    // Serial.println("Sleep");
+    // vTaskDelay(1000);
+    // esp_sleep_enable_timer_wakeup(20000*1000);
+    // esp_light_sleep_start();
+    // Serial.println("waken");
+    vTaskDelay(20000);
     //10 seconds interval timer
     if ((millis()-previous_time) >= 30000){ //Check if the duration between current and previous time point is 10 seconds
       tensecondscount += 1; //Increment the number of 10 seconds that has passed.
@@ -781,7 +787,7 @@ void setup() {
   xTaskCreatePinnedToCore(
                     Serial_Com,   /* Task function. */
                     "Serial Com Manager",     /* name of task. */
-                    30000,       /* Stack size of task */
+                    50000,       /* Stack size of task */
                     NULL,        // parameter of the task 
                     1,           /* priority of the task */
                     &Serial_Com_Handler,      /* Task handle to keep track of created task */
@@ -792,7 +798,7 @@ void setup() {
   xTaskCreatePinnedToCore(
                     Check_Clim,   /* Task function. */
                     "Check Climate",     /* name of task. */
-                    30000,       /* Stack size of task */
+                    50000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
                     2,           /* priority of the task */
                     &Check_Clim_Handler,      /* Task handle to keep track of created task */

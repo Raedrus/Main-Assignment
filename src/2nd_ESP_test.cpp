@@ -191,13 +191,59 @@ void send_wait(String event){
 void SerialCom(){
     Check_serial();
     if (com==Update)//Update
-    {
+    {   
+
         send_wait("Register");
         
         /*UPDATE the registration info*/
         send_wait(String(reg));
         send_wait(String(ani));
         send_wait(String(ID));
+
+        
+  //Serial to laptop (run regardless of wifi status)
+  switch(reg){
+    case SalesDelivery:
+        if (ani == 0){ //if pig
+        Serial.print("salesPig_ID:");
+        Serial.println(String(ID));
+        Serial.flush();  // Ensure data is fully sent before the next data
+        }
+        else if (ani == 1){ //if chicken
+        Serial.print("salesChic_ID:");
+        Serial.println(String(ID));
+        Serial.flush();  // Ensure data is fully sent before the next data
+        }
+    break;
+
+    case Recovery:
+        if (ani == 0){ //if pig
+        Serial.print("recoveryPig_ID:");
+        Serial.println(String(ID));
+        Serial.flush();
+        }
+        else if (ani == 1){ //if chicken
+        Serial.print("recoveryChic_ID:");
+        Serial.println(String(ID));
+        Serial.flush();  // Ensure data is fully sent before the next data
+        }
+      break;
+
+    case Deceased:
+        if (ani == 0){ //if pig
+        Serial.print("deceasedPig_ID:");
+        Serial.println(String(ID));
+        Serial.flush();  // Ensure data is fully sent before the next data
+        }
+        else if (ani == 1){ //if chicken
+        Serial.print("deceasedChic_ID:");
+        Serial.println(String(ID));
+        Serial.flush();  // Ensure data is fully sent before the next data
+        }
+      break;
+  }
+
+
     }
 
     else if (com==Controlsys)//Controlsys
@@ -224,19 +270,28 @@ bool Check_serial(){
         if (received_data=="Clim"){
             Display.Show1s("Updating Temp...");
             send_wait("OKTemp");
+
             Temp1=received_data.toInt();
+            float Temp1a = received_data.toFloat();
             send_wait("OKTemp");
             Humi1=received_data.toInt();
+            float Humi1a = received_data.toFloat();
             send_wait("OKTemp");
             Temp2=received_data.toInt();
+            float Temp2a = received_data.toFloat();
             send_wait("OKTemp");
             Humi2=received_data.toInt();
+            float Humi2a = received_data.toFloat();
             Serial2.print("OKTemp");
-
-            Serial.println(Temp1);
-            Serial.println(Humi1);
-            Serial.println(Temp2);
-            Serial.println(Humi2);
+         
+            Serial.print("Temp1:");
+            Serial.println(Temp1a);
+            Serial.print("Humi1:");
+            Serial.println(Humi1a);
+            Serial.print("Temp2:");
+            Serial.println(Temp2a);
+            Serial.print("Humi2:");
+            Serial.println(Humi2a);
             LCD_Temp();
         }   
 
