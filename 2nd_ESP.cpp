@@ -160,27 +160,22 @@ void loop() {
 //Send + Waiting for Serial Response
 void send_wait(String event){
     Serial2.flush();
-    int c=0;
-    int d=0;
+    int c;
+    int d;
     Serial2.print(event);
     Serial.print(event);
     while (Serial2.available()==0){
             delay(1);
             c++;
-            if (c>200){
+            if (c>2000){
                 Serial2.print(event);
                 Serial.print(event);
                 c=0;
-                d++;
-            }
-            if (d>10){
-                
-                break;
-            }
+            
             //waiting response
-        }
+            }
     //read the response msg
-    
+    }
     received_data=Serial2.readString();
     Serial.println("REceivED");
     // received_data.trim();  
