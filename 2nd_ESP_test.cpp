@@ -24,17 +24,17 @@ byte colPins[KP_COLS] = {23, 22, 21, 19}; // connect to the column pinouts of th
 
 Keypad kpd = Keypad(makeKeymap(keys), rowPins, colPins, KP_ROWS, KP_COLS);
 
-/*Variables from ESP1*/
+/*----------------Variables from MAIN ESP------------------*/
 int Temp1; // Temperature for enclosure 1
 int Humi1; // Humidity for enclosure 1
 int Temp2; // Temperature for enclosure 2
 int Humi2; // Humidity for enclosure 2
 
-/*Variables to ESP1*/
+/*------------------Variables to MAIN ESP--------------------*/
 enum ANIMAL //Enumeration for animal type.
 {
     Pig,
-    Chicken
+    Chicken 
 };
 ANIMAL ani;
 ANIMAL enclosure;
@@ -47,9 +47,9 @@ enum STATE  //Enumeration for state of animal for registeration.
 };
 STATE reg;
 
-int ID;
+int ID; //Animal ID
 
-enum CONTROL
+enum CONTROL  //Enumeration for type of control.
 {
     VentilationOn,
     VentilationOff,
@@ -60,22 +60,23 @@ enum CONTROL
 };
 CONTROL cont;
 
-/*Internal Variables*/
-char16_t key; // keypad input
-int i = 0;    // universal
-String received_data;
+/*----------------Internal Variables-----------------*/
+char16_t key;           // keypad input
+int i = 0;              // universal
+int j = 0;              // universal
+String received_data;   // A variable to store serial communication input
 
-enum Communication
+enum Communication //Enumeration for type of Serial Communication
 {
     Update,
     Controlsys
 };
-Communication com;
+Communication com;      
 
 /*--------------Functions--------------*/
 // Send + Waiting for Serial Response
 void send_wait(String event);
-// Send serial to ESP1
+// Send serial to MAIN ESP
 void SerialCom();
 // check serial communication input
 bool Check_serial();
@@ -100,7 +101,7 @@ public:
         lcd.print(Event);
         delay(1000);
     }
-    // For selection purpose
+    // Display at LCD with Option to Next selection 
     void Selection(String Event)
     {
         lcd.clear();
@@ -119,41 +120,41 @@ void setup()
 
     // set up the LCD's number of columns and rows:
     lcd.begin(LCD_COLS, LCD_ROWS);
+    
+    // Initiating Serial Communication
     Serial.begin(115200);
     Serial2.begin(115200);
+
     // Print a message to the LCD, indicate the LCD is working
     Display.Show1s("Waiting for ESP1");
-    //   while(1){
-    //     if (Serial2.available()>1){
-    //         received_data=Serial2.readString();
-    //         received_data.trim();
-    //         Display.Show1s(received_data);
-    //     }
-    //     if (kpd.getKey()=='#'){
-    //             break;
-    //         }
-    //   }
-    while (!Check_serial())
+
+    while (!Check_serial()) //Wait for the temperature and humidity value 
+                            //OR straight exit by typing '#'
     {
         if (kpd.getKey() == '#')
         {
             break;
         }
     }
-    LCD_Temp();
+    LCD_Temp(); // Show the latest value at LCD
 }
 
-void loop()
+
+void loop() //  Main Function
 {
-    Check_serial();
-    if (kpd.getKey() == '#')
+    Check_serial(); // check if there is Serial Communication Input
+
+    if (kpd.getKey() == '#') // Access to Registration or Control by '#'
     {
-        digitalWrite(13, HIGH);
+        digitalWrite(13, HIGH); // Inform MAIN ESP it is busy
+        
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("1:Registration");
         lcd.setCursor(0, 1);
         lcd.print("2:Control");
+
+        // Selection to register or control
         while (key != '1' && key != '2')
         {
             delay(1);
@@ -171,10 +172,10 @@ void loop()
         default:
             break;
         }
-        digitalWrite(13, LOW);
+        digitalWrite(13, LOW);  // Inform MAIN ESP it is free
         Display.Show1s("Back To Main...");
-        LCD_Temp();
-        key = 'Z';
+        LCD_Temp(); // show latest temp and humid at the lcd 
+        key = 'Z'; // clear previous data
     }
 }
 
@@ -183,14 +184,18 @@ void send_wait(String event)
 {
     Serial2.flush();
     int c;
-    int d;
+
+    //Serial Communication to MAIN ESP
     Serial2.print(event);
+    //Serial print to laptop for debugging purpose
     Serial.print(event);
+
+    //wait for reply
     while (Serial2.available() == 0)
     {
         delay(1);
         c++;
-        if (c > 2000)
+        if (c > 2000) //if no reply after 2s, send again
         {
             Serial2.print(event);
             Serial.print(event);
@@ -198,11 +203,13 @@ void send_wait(String event)
 
             // waiting response
         }
-        // read the response msg
     }
+
+    // read the response msg
     received_data = Serial2.readString();
+
+    // Debugging purpose
     Serial.println("REceivED");
-    // received_data.trim();
     Serial.println(received_data);
 }
 
@@ -213,9 +220,9 @@ void SerialCom()
     if (com == Update) // Update
     {
 
-        send_wait("Register");
+        send_wait("Register"); // Inform Main ESP to prepare for register
 
-        /*UPDATE the registration info*/
+        /*------------UPDATE the registration info---------*/
         send_wait(String(reg));
         send_wait(String(ani));
         send_wait(String(ID));
@@ -273,8 +280,9 @@ void SerialCom()
     else if (com == Controlsys) // Controlsys
     {
 
-        send_wait("Control");
+        send_wait("Control"); // Inform Main ESP to prepare for output control
 
+        /*------------Send the output info----------*/
         send_wait(String(enclosure));
         send_wait(String(cont));
     }
@@ -291,12 +299,12 @@ bool Check_serial()
         received_data = Serial2.readString();
         received_data.trim();
         Serial.print(received_data);
+
         // Update Temperature and Humidity
         if (received_data == "Clim")
         {
             Display.Show1s("Updating Temp...");
             send_wait("OKTemp");
-
             Temp1 = received_data.toInt();
             float Temp1a = received_data.toFloat();
             send_wait("OKTemp");
@@ -310,6 +318,7 @@ bool Check_serial()
             float Humi2a = received_data.toFloat();
             Serial2.print("OKTemp");
 
+            // Log to PC for local data storage
             Serial.print("Temp1:");
             Serial.println(Temp1a);
             Serial.print("Humi1:");
@@ -319,21 +328,24 @@ bool Check_serial()
             Serial.print("Humi2:");
             Serial.println(Humi2a);
 
+            // For debugging purpose
             Serial.println(Temp1);
             Serial.println(Humi1);
             Serial.println(Temp2);
             Serial.println(Humi2);
+
+            // show the latest value at LCD
             LCD_Temp();
         }
-
-        return true;
+        return true; // indicate input was detected
     }
 
     else
-        return false;
+        return false; // indicate no input was detected
 }
 
-void Control_sys()
+
+void Control_sys() // To allow manual keypad input to control the output
 {
     Display.Show1s("System Control");
 
@@ -366,14 +378,17 @@ void Control_sys()
         }
     }
 
-    // Select option
+    //clear previous values
     i = 0;
-    int j = 0;
-    // Category Input
+    j = 0;
+
+    // Choose which output to control
     while (key != 'A')
     {
         delay(1.5);
-        key = 'Z';
+        key = 'Z'; // Clear previous input
+
+        // Display LCD
         switch (i)
         {
         case 1:
@@ -410,12 +425,14 @@ void Control_sys()
 
         else
         {
-            Display.Show1s("Process Failed");
+            // if error input comes out
+            Display.Show1s("Process Failed"); 
             key = 'A';
             break;
         }
     }
 
+    // choose on or off
     while (key != 'A')
     {
         key = 'Z';
@@ -441,7 +458,8 @@ void Control_sys()
 
         else if (key == '2')
         {
-            j++; // j odd is off, originally is even
+            j++; // when j is odd, MEANING OFF
+                //  originally is even
             break;
         }
 
@@ -458,21 +476,22 @@ void Control_sys()
         }
     }
 
-    if (key != 'A') // send the instruction to ESP1
+    if (key != 'A') // send the instruction to Main ESP
     {
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("Sending Command");
-        cont = static_cast<CONTROL>(j);
-        com = Controlsys;
-        SerialCom();
-        Display.Show1s("Done");
+        lcd.print("Sending Command"); 
+        cont = static_cast<CONTROL>(j); // convert value in j into enum
+        com = Controlsys;               // control mode
+        SerialCom();                    // send the config to Main ESP
+        Display.Show1s("Done");         // Indicate the process is done
     }
 }
 
 // Registration of animals
 void Registration()
-{
+{   
+    // Choose Animal   
     while (key != 'A')
     {
         lcd.clear();
@@ -483,12 +502,15 @@ void Registration()
         delay(1000);
         lcd.clear();
 
-        i = 0;
-        // Category Input
+        i = 0; // Clear previous data
+
+        // Choose State
         while (key != 'A')
         {
 
-            key = 'Z';
+            key = 'Z';// Clear previous data
+
+            // Display LCD
             switch (i)
             {
             case 1:
@@ -511,7 +533,7 @@ void Registration()
 
             if (key == '1')
             {
-                reg = static_cast<STATE>(i);
+                reg = static_cast<STATE>(i); // Convert value in i into enum 
                 delay(200);
                 break;
             }
@@ -535,10 +557,10 @@ void Registration()
 
         lcd.clear();
 
-        // Animal Type Input
+        // Choose Animal Type 
         if (key != 'A')
         {
-            key = 'Z';
+            key = 'Z'; // Clear previous data
             lcd.setCursor(0, 0);
             lcd.print("1:Pig    A:EXIT");
             lcd.setCursor(0, 1);
@@ -571,17 +593,18 @@ void Registration()
             }
         }
 
-        ID = 0;
+        ID = 0; // Clear previous data
+        
         // Animal ID input
         while (key != 'A')
         {
             lcd.setCursor(0, 0);
             lcd.printf("Animal ID: ");
-            lcd.printf("%.3d", ID);
+            lcd.printf("%.3d", ID); // Display the ID
             lcd.setCursor(0, 1);
             lcd.print("C:Confirm A:Exit");
 
-            key = 'Z';
+            key = 'Z'; // Clear previous data
             key = kpd.getKey();
 
             if (key == 'A' || key == 'C')
@@ -601,12 +624,12 @@ void Registration()
             lcd.setCursor(0, 0);
             lcd.print("Registering...");
             com = Update; // Set to Update config
-            SerialCom();  // Send data to the ESP1
-            Display.Show1s("Done");
+            SerialCom();  // Send data to the Main ESP
+            Display.Show1s("Done"); // Indicate the process is done
         }
     }
 
-    key = 'Z';
+    key = 'Z'; // Clear previous data
 }
 
 // Display Temp and Humid at LCD
