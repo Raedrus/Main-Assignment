@@ -672,6 +672,36 @@ void Serial_Com(void *pvParameters)
   }
 }
 
+// Function for data logging to firebase and local storage.
+void Logger()
+{
+
+  // Set temperature and humidity readings in JSON1
+  json1.set(tempPath1.c_str(), String(Temp1));
+  json1.set(humPath1.c_str(), String(Humi1));
+  json1.set(timePath1, "timestamp");
+
+  // Set temperature and humidity readings in JSON2
+  json2.set(tempPath2.c_str(), String(Temp2));
+  json2.set(humPath2.c_str(), String(Humi2));
+  json2.set(timePath2, "timestamp");
+
+  // Push JSON1 to Firebase
+  Serial.printf("Set json1... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath1.c_str(), &json1) ? "ok" : fbdo.errorReason().c_str());
+
+  // Push JSON2 to Firebase
+  Serial.printf("Set json2... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath2.c_str(), &json2) ? "ok" : fbdo.errorReason().c_str());
+
+  // For serial update via USB to PC
+  Serial.print(Temp1);
+  Serial.print(",");
+  Serial.print(Humi1);
+  Serial.print(",");
+  Serial.print(Temp2);
+  Serial.print(",");
+  Serial.println(Humi2); // End with a newline character.
+}
+
 // Check and log climate, feed level and water level data.
 void Check_Clim(void *pvParameters)
 {
@@ -740,35 +770,7 @@ void Check_Clim(void *pvParameters)
   }
 }
 
-// Function for data logging to firebase and local storage.
-void Logger()
-{
 
-  // Set temperature and humidity readings in JSON1
-  json1.set(tempPath1.c_str(), String(Temp1));
-  json1.set(humPath1.c_str(), String(Humi1));
-  json1.set(timePath1, "timestamp");
-
-  // Set temperature and humidity readings in JSON2
-  json2.set(tempPath2.c_str(), String(Temp2));
-  json2.set(humPath2.c_str(), String(Humi2));
-  json2.set(timePath2, "timestamp");
-
-  // Push JSON1 to Firebase
-  Serial.printf("Set json1... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath1.c_str(), &json1) ? "ok" : fbdo.errorReason().c_str());
-
-  // Push JSON2 to Firebase
-  Serial.printf("Set json2... %s\n", Firebase.RTDB.pushJSON(&fbdo, sensorPath2.c_str(), &json2) ? "ok" : fbdo.errorReason().c_str());
-
-  // For serial update via USB to PC
-  Serial.print(Temp1);
-  Serial.print(",");
-  Serial.print(Humi1);
-  Serial.print(",");
-  Serial.print(Temp2);
-  Serial.print(",");
-  Serial.println(Humi2); // End with a newline character.
-}
 
 // Setup for ESP32
 void setup()
@@ -907,16 +909,6 @@ void setup()
       0);                  /* pin task to core 0 */
   vTaskDelay(50);
 
-  // create a task that will be executed in the Logger() function, with priority 1 and executed on core 1
-  //  xTaskCreatePinnedToCore(
-  //                    Logger,   /* Task function. */
-  //                    "Data Logging",     /* name of task. */
-  //                    10000,       /* Stack size of task */
-  //                    NULL,        // parameter of the task
-  //                    3,           /* priority of the task */
-  //                    &Logger_Handler,      /* Task handle to keep track of created task */
-  //                    0);          /* pin task to core 1 */
-  //  vTaskDelay(50);
 }
 
 /*------------------------END OF FREERTOSS SETUP-----------------------------------*/
