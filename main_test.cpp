@@ -291,8 +291,8 @@ void streamCallback(FirebaseStream data)
   String streamPath = String(data.dataPath());
 
   /* When it first runs, it is triggered on the root (/) path and returns a JSON with all key
-  and values of that path.So, we can get all values from the database and updated the GPIO
-  states, PWM, and message on OLED*/
+  and values of that path.So, we can get all values from the database and update the GPIO
+  states.*/
   if (data.dataTypeEnum() == fb_esp_rtdb_data_type_json)
   {
     FirebaseJson *json = data.to<FirebaseJson *>();
@@ -594,26 +594,25 @@ void registry_update(registry *x)
 void LCD_Serial()
 {
   Serial2.flush();
-  if (!digitalRead(CHECKPIN)) //Check if esp2 is busy
+  if (!digitalRead(CHECKPIN)) // Check if esp2 is busy
   {
-    serial_wait("Clim");  //Send a trigger message to let esp2 enter LCD update mode.
+    serial_wait("Clim"); // Send a trigger message to let esp2 enter LCD update mode.
     Serial2.flush();
 
     // Convert the climate data to string and send.
     static String data_send_str;
     data_send_str = String(Temp1);
-    serial_wait(data_send_str); //Send the data.
+    serial_wait(data_send_str); // Send the data.
 
     data_send_str = String(Humi1);
-    serial_wait(data_send_str); //Send the data.
+    serial_wait(data_send_str); // Send the data.
 
     data_send_str = String(Temp2);
-    serial_wait(data_send_str); //Send the data.
+    serial_wait(data_send_str); // Send the data.
 
     data_send_str = String(Humi2);
-    serial_wait(data_send_str); //Send the data.
+    serial_wait(data_send_str); // Send the data.
   }
-
 }
 // Handles incoming registeration data and manual climate control.
 void Serial_Com(void *pvParameters)
@@ -630,42 +629,42 @@ void Serial_Com(void *pvParameters)
         break;                      // Stop following checks
       else
       {
-        if (received_msg == "Register")
-        { // Check if the message is matching
-          serial_fetch();
-          reg = static_cast<STATE>(received_msg.toInt());
-          switch (reg)
+        if (received_msg == "Register") // Check if the message is matching
+        {
+          serial_fetch();                                 // Trigger esp2 to send data
+          reg = static_cast<STATE>(received_msg.toInt()); // Store and process the integer from string.
+          switch (reg)                                    // Check matching registeration states/type.
           {
           case SalesDelivery:
-            registry_update(&salesdelivery);
+            registry_update(&salesdelivery); // update registry of Sales and Delivery.
             break;
           case Recovery:
-            registry_update(&recovery);
+            registry_update(&recovery); // update registry of Recovery.
             break;
           case Deceased:
-            registry_update(&deceased);
+            registry_update(&deceased); // update registry of Deceased.
             break;
           default:
             break;
           }
-          Serial2.print("received");
+          Serial2.print("received"); // Acknowledge and end transmission
         }
-        if (received_msg == "Control")
+        if (received_msg == "Control") // Check if message matches.
         {
-          serial_fetch();
-          enclosure = static_cast<ANIMAL>(received_msg.toInt());
-          serial_fetch();
-          cont = static_cast<CONTROL>(received_msg.toInt());
-          if (enclosure == Pig)
+          serial_fetch();                                        // Trigger esp2 to send data
+          enclosure = static_cast<ANIMAL>(received_msg.toInt()); // Store and process the integer from string.
+          serial_fetch();                                        // Trigger esp2 to send data
+          cont = static_cast<CONTROL>(received_msg.toInt());     // Store and process the integer from string.
+          if (enclosure == Pig)                                  // Check if the integer corresponds to the enum member Pig.
           {
-            user_clim_control(en1, cont);
+            user_clim_control(en1, cont); // Executes selected control in the selected enclosure.
           }
 
-          if (enclosure == Chicken)
+          if (enclosure == Chicken) // Check if the integer corresponds to the enum member Chicken.
           {
-            user_clim_control(en2, cont);
+            user_clim_control(en2, cont); // Executes selected control in the selected enclosure.
           }
-          Serial2.print("received");
+          Serial2.print("received"); // Acknowledge and end transmission
         }
       }
     }
@@ -688,13 +687,13 @@ void Check_Clim(void *pvParameters)
     Humi2 = dht2.readHumidity();
     Temp2 = dht2.readTemperature();
 
+    // Set values to 0 if sensor cannot be read from.
     if (isnan(Humi1) || isnan(Temp1))
     {
       Serial.println(F("Failed to read from DHT sensor 1!"));
       Humi1 = 0;
       Temp1 = 0;
     }
-
     if (isnan(Humi2) || isnan(Temp2))
     {
       Serial.println(F("Failed to read from DHT sensor 2!"));
