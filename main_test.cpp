@@ -916,3 +916,20 @@ void setup()
 void loop()
 {
 }
+
+/*
+----------------------Partially Done Codes------------------------------
+#include "esp_sleep.h"
+
+void sleep(){
+  // Configure the ESP32 to wake up on UART (serial input)
+  esp_sleep_enable_uart_wakeup(USART_NUM_2); // For Serial port 2
+  esp_sleep_enable_uart_wakeup(USART_NUM_1); // For Serial port 1
+  esp_light_sleep_start();  // Enter light sleep
+}
+
+
+
+
+
+*/
