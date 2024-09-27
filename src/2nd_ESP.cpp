@@ -366,14 +366,14 @@ void Control_sys() // To allow manual keypad input to control the output
             key = kpd.getKey();
         }
 
-        // pig
+        //pig
         if (key == '1')
         {
             enclosure = Pig;
             break;
         }
 
-        // chicken
+        //chicken
         else if (key == '2')
         {
             enclosure = Chicken;
@@ -423,20 +423,20 @@ void Control_sys() // To allow manual keypad input to control the output
         HeaterOff
         }*/
 
-        // confirm
+        //confirm
         if (key == '1')
         {
             j = i * 2;
             break;
         }
 
-        // next
+        //next
         else if (key == '2')
         {
             i++;
         }
 
-        // exit
+        //exit
         else if (key == 'A')
             break;
 
@@ -478,14 +478,14 @@ void Control_sys() // To allow manual keypad input to control the output
         HeaterOff
         }*/
 
-        // on
+        //on
         if (key == '1')
         {
             // when j is even, meaning ON
             break;
         }
 
-        // off
+        //off
         else if (key == '2')
         {
             j++; // when j is odd, MEANING OFF
@@ -493,7 +493,7 @@ void Control_sys() // To allow manual keypad input to control the output
             break;
         }
 
-        // exit
+        //exit
         else if (key == 'A')
         {
             break;
@@ -556,14 +556,14 @@ void Registration()
                 break;
             }
 
-            // Select to confirm or next selction or exit
+            //Select to confirm or next selction or exit
             while (key != '1' && key != '2' && key != 'A')
             {
                 delay(1);
                 key = kpd.getKey();
             }
 
-            // confirm
+            //confirm
             if (key == '1')
             {
                 reg = static_cast<STATE>(i); // Convert value in i into enum
@@ -571,14 +571,14 @@ void Registration()
                 break;
             }
 
-            // next
+            //next
             else if (key == '2')
             {
                 i++;
                 delay(200);
             }
 
-            // exit
+            //exit
             else if (key == 'A')
                 break;
 
@@ -601,7 +601,7 @@ void Registration()
             lcd.setCursor(0, 1);
             lcd.print("2:Chicken");
 
-            // selection of pig and chicken
+            //selection of pig and chicken
             while (key != '1' && key != '2' && key != 'A')
             {
                 delay(1);
@@ -611,15 +611,15 @@ void Registration()
             lcd.clear();
             switch (key)
             {
-            case '1': // pig is selected
+            case '1'://pig is selected
                 ani = Pig;
                 key = 'Z';
                 break;
-            case '2': // chicken is selected
+            case '2'://chicken is selected
                 ani = Chicken;
                 key = 'Z';
                 break;
-            case 'A': // exit
+            case 'A'://exit
                 Display.Show1s("Exiting...");
                 break;
             default:
@@ -649,7 +649,7 @@ void Registration()
             // Change from ASCII to Normal Int
             else if (int(key) >= 48 && int(key) <= 57)
             {
-                ID = int(key) - 48 + ID * 10; // update the ID
+                ID = int(key) - 48 + ID * 10; //update the ID
                 delay(200);
             }
         }
