@@ -917,18 +917,7 @@ void loop()
 
 /*
 ----------------------Partially Done Codes------------------------------
-#include "esp_sleep.h"
-
-// for saving power consumption by entering sleep
-void sleep(){
-  // Configure the ESP32 to wake up on UART (serial input)
-  esp_sleep_enable_uart_wakeup(USART_NUM_2); // wake when there is activity For Serial port 2
-  esp_sleep_enable_uart_wakeup(USART_NUM_1); // wake when there is activity For Serial port 1
-  esp_light_sleep_start();  // Enter light sleep 
-}
-
-
-  
+ 
   // for Saving the unlogged data when Wi-Fi is unavailable. When it becomes available again, all the saved data will be logged to the cloud
   {received_msg2 = Serial2.readString();
   received_msg2.trim();
@@ -1040,6 +1029,29 @@ void sleep(){
   }
 }//registry update
 
+// to automatic control the water and feed system 
+void water_system_control(){
+  if (waterLevel <= 30) // Check if water level is too low.
+  {
+    digitalWrite(water_control, HIGH); // Open the valve to fill water
+    sendInt(outputPath + String(water_control), 1);   // Update output status to firebase.
+  }
+  if (waterLevel >= 60) // Check if water level is sufficient.
+  {
+    digitalWrite(water_control, LOW); // Close the valve to stop filling water
+    sendInt(outputPath + String(water_control), 0);   // Update output status to firebase.
+  }
+}
+
+#include "esp_sleep.h"
+
+// for saving power consumption by entering sleep
+void sleep(){
+  // Configure the ESP32 to wake up on UART (serial input)
+  esp_sleep_enable_uart_wakeup(USART_NUM_2); // wake when there is activity For Serial port 2
+  esp_sleep_enable_uart_wakeup(USART_NUM_1); // wake when there is activity For Serial port 1
+  esp_light_sleep_start();  // Enter light sleep 
+}
 
 
 */
