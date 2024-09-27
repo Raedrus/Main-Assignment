@@ -169,6 +169,6 @@ function exportTableToCSV() {
     });
 }
 
-trigger this function with a button in HTML
+//trigger this function with a button in HTML
 <button onclick="exportTableToExcel()">Export as Excel</button>
 */
