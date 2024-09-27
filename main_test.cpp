@@ -614,6 +614,7 @@ void LCD_Serial()
     serial_wait(data_send_str); // Send the data.
   }
 }
+
 // Handles incoming registeration data and manual climate control.
 void Serial_Com(void *pvParameters)
 {
@@ -770,8 +771,6 @@ void Check_Clim(void *pvParameters)
   }
 }
 
-
-
 // Setup for ESP32
 void setup()
 {
@@ -810,7 +809,7 @@ void setup()
   pinMode(Feed_sensor5, INPUT);
   pinMode(Water_sensor, INPUT);
 
-  // Pin for checking status of esp2, high trigger pin.
+  // Pin for checking status of esp2, high trigger pin (detects high as trigger).
   // If this pin receives high signal from esp2, the esp2 is busy.
   pinMode(CHECKPIN, INPUT_PULLDOWN);
 
@@ -908,7 +907,6 @@ void setup()
       &Check_Clim_Handler, /* Task handle to keep track of created task */
       0);                  /* pin task to core 0 */
   vTaskDelay(50);
-
 }
 
 /*------------------------END OF FREERTOSS SETUP-----------------------------------*/
