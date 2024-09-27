@@ -171,6 +171,7 @@ void loop() //  Main Function
         default:
             break;
         }
+
         digitalWrite(13, LOW); // Inform MAIN ESP it is free
         Display.Show1s("Back To Main...");
         LCD_Temp(); // show latest temp and humid at the lcd
@@ -356,19 +357,23 @@ void Control_sys() // To allow manual keypad input to control the output
         lcd.setCursor(0, 1);
         lcd.print("1:Pig  2:Chicken");
 
-        key = 'Z';
+        key = 'Z'; // Clear previous value
+
+        // Selection to pig or chicken or exit
         while (key != '1' && key != '2' && key != 'A')
         {
             delay(1);
             key = kpd.getKey();
         }
 
+        // pig
         if (key == '1')
         {
             enclosure = Pig;
             break;
         }
 
+        // chicken
         else if (key == '2')
         {
             enclosure = Chicken;
@@ -401,23 +406,37 @@ void Control_sys() // To allow manual keypad input to control the output
             break;
         }
 
+        // Select to confirm or next selection or exit
         while (key != '1' && key != '2' && key != 'A')
         {
             delay(1);
             key = kpd.getKey();
         }
 
+        /*---the enum for control----
+        {
+        VentilationOn,
+        VentilationOff,
+        CoolerOn,
+        CoolerOff,
+        HeaterOn,
+        HeaterOff
+        }*/
+
+        // confirm
         if (key == '1')
         {
             j = i * 2;
             break;
         }
 
+        // next
         else if (key == '2')
         {
             i++;
         }
 
+        // exit
         else if (key == 'A')
             break;
 
@@ -430,7 +449,7 @@ void Control_sys() // To allow manual keypad input to control the output
         }
     }
 
-    // choose on or off
+    // while exit is not chosen
     while (key != 'A')
     {
         key = 'Z';
@@ -442,18 +461,31 @@ void Control_sys() // To allow manual keypad input to control the output
         lcd.setCursor(0, 1);
         lcd.print("2:Off     A:Exit");
 
+        // Select to on or off
         while (key != '1' && key != '2' && key != 'A')
         {
             delay(1);
             key = kpd.getKey();
         }
 
+        /*---the enum for control----
+        {
+        VentilationOn,
+        VentilationOff,
+        CoolerOn,
+        CoolerOff,
+        HeaterOn,
+        HeaterOff
+        }*/
+
+        // on
         if (key == '1')
         {
             // when j is even, meaning ON
             break;
         }
 
+        // off
         else if (key == '2')
         {
             j++; // when j is odd, MEANING OFF
@@ -461,6 +493,7 @@ void Control_sys() // To allow manual keypad input to control the output
             break;
         }
 
+        // exit
         else if (key == 'A')
         {
             break;
@@ -523,12 +556,14 @@ void Registration()
                 break;
             }
 
+            // Select to confirm or next selction or exit
             while (key != '1' && key != '2' && key != 'A')
             {
                 delay(1);
                 key = kpd.getKey();
             }
 
+            // confirm
             if (key == '1')
             {
                 reg = static_cast<STATE>(i); // Convert value in i into enum
@@ -536,12 +571,14 @@ void Registration()
                 break;
             }
 
+            // next
             else if (key == '2')
             {
                 i++;
                 delay(200);
             }
 
+            // exit
             else if (key == 'A')
                 break;
 
@@ -564,6 +601,7 @@ void Registration()
             lcd.setCursor(0, 1);
             lcd.print("2:Chicken");
 
+            // selection of pig and chicken
             while (key != '1' && key != '2' && key != 'A')
             {
                 delay(1);
@@ -573,15 +611,15 @@ void Registration()
             lcd.clear();
             switch (key)
             {
-            case '1':
+            case '1': // pig is selected
                 ani = Pig;
                 key = 'Z';
                 break;
-            case '2':
+            case '2': // chicken is selected
                 ani = Chicken;
                 key = 'Z';
                 break;
-            case 'A':
+            case 'A': // exit
                 Display.Show1s("Exiting...");
                 break;
             default:
@@ -611,7 +649,7 @@ void Registration()
             // Change from ASCII to Normal Int
             else if (int(key) >= 48 && int(key) <= 57)
             {
-                ID = int(key) - 48 + ID * 10;
+                ID = int(key) - 48 + ID * 10; // update the ID
                 delay(200);
             }
         }
